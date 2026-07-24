@@ -32,6 +32,14 @@ type Alert = {
   };
 };
 
+type SpcOutlook = {
+  label: string;
+  code: string;
+  issued?: string;
+  expires?: string;
+  color: string;
+};
+
 const DEFAULT_PLACE: Place = {
   name: "Johnston",
   admin1: "Iowa",
@@ -94,6 +102,40 @@ const windDirection = (degrees: number) => {
   return points[Math.round(degrees / 45) % 8];
 };
 
+const pointInRing = (point: [number, number], ring: number[][]) => {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (
+      yi > point[1] !== yj > point[1] &&
+      point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi
+    ) {
+      inside = !inside;
+    }
+  }
+  return inside;
+};
+
+const pointInPolygon = (point: [number, number], rings: number[][][]) =>
+  pointInRing(point, rings[0]) &&
+  !rings.slice(1).some((hole) => pointInRing(point, hole));
+
+const featureContainsPoint = (
+  point: [number, number],
+  geometry: { type: string; coordinates: number[][][] | number[][][][] },
+) => {
+  if (geometry.type === "Polygon") {
+    return pointInPolygon(point, geometry.coordinates as number[][][]);
+  }
+  if (geometry.type === "MultiPolygon") {
+    return (geometry.coordinates as number[][][][]).some((polygon) =>
+      pointInPolygon(point, polygon),
+    );
+  }
+  return false;
+};
+
 function WeatherMark({ code, large = false }: { code: number; large?: boolean }) {
   return (
     <span className={large ? "weather-mark weather-mark--large" : "weather-mark"} aria-hidden="true">
@@ -106,6 +148,7 @@ export default function Home() {
   const [place, setPlace] = useState<Place>(DEFAULT_PLACE);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [spcOutlook, setSpcOutlook] = useState<SpcOutlook | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,12 +193,45 @@ export default function Home() {
           .then((response) => (response.ok ? response.json() : { features: [] }))
           .catch(() => ({ features: [] }));
 
-        const [weatherResponse, alertResponse] = await Promise.all([
+        const spcRequest = fetch(
+          "https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson",
+          { signal: controller.signal },
+        )
+          .then((response) => (response.ok ? response.json() : { features: [] }))
+          .catch(() => ({ features: [] }));
+
+        const [weatherResponse, alertResponse, spcResponse] = await Promise.all([
           weatherRequest,
           alertRequest,
+          spcRequest,
         ]);
         setWeather(weatherResponse);
         setAlerts(alertResponse.features ?? []);
+        const point: [number, number] = [place.longitude, place.latitude];
+        const matchingOutlooks = (spcResponse.features ?? [])
+          .filter((feature: { geometry: { type: string; coordinates: number[][][] | number[][][][] } }) =>
+            featureContainsPoint(point, feature.geometry),
+          )
+          .sort(
+            (a: { properties: { DN?: number } }, b: { properties: { DN?: number } }) =>
+              Number(b.properties.DN ?? 0) - Number(a.properties.DN ?? 0),
+          );
+        const localOutlook = matchingOutlooks[0]?.properties;
+        setSpcOutlook(
+          localOutlook
+            ? {
+                label: localOutlook.LABEL2 ?? "Day 1 outlook",
+                code: localOutlook.LABEL ?? "SPC",
+                issued: localOutlook.ISSUE_ISO,
+                expires: localOutlook.EXPIRE_ISO,
+                color: localOutlook.fill ?? "#dbe8de",
+              }
+            : {
+                label: "No Day 1 outlook area",
+                code: "NONE",
+                color: "#dfe9e4",
+              },
+        );
         setUpdated(formatUpdated());
       } catch (requestError) {
         if ((requestError as Error).name !== "AbortError") {
@@ -408,6 +484,33 @@ export default function Home() {
                   ) : (
                     <p>There are no watches, warnings, or advisories for this location right now.</p>
                   )}
+                  <div className="spc-update">
+                    <div className="spc-update__heading">
+                      <span
+                        className="spc-risk-dot"
+                        style={{ background: spcOutlook?.color ?? "#dfe9e4" }}
+                      />
+                      <div>
+                        <span>SPC Day 1 outlook for {place.name}</span>
+                        <strong>{spcOutlook?.label ?? "Checking the latest outlook…"}</strong>
+                      </div>
+                    </div>
+                    <p>
+                      {spcOutlook?.issued
+                        ? `Issued ${new Date(spcOutlook.issued).toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}.`
+                        : "No organized thunderstorm area currently includes this location."}
+                    </p>
+                    <a
+                      href="https://www.spc.noaa.gov/products/outlook/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View Storm Prediction Center outlooks <span>↗</span>
+                    </a>
+                  </div>
                 </article>
 
                 <article className="radar-card">
