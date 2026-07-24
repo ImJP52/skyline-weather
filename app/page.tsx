@@ -541,6 +541,26 @@ export default function Home() {
               </article>
             </section>
 
+            <section className="panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Next 24 hours</p>
+                  <h2>Hourly forecast</h2>
+                </div>
+                <span>Scroll to explore →</span>
+              </div>
+              <div className="hourly-list">
+                {hourly.map(({ time, index }, displayIndex) => (
+                  <article className="hour-card" key={time}>
+                    <p>{displayIndex === 0 ? "Now" : formatHour(time)}</p>
+                    <WeatherMark code={Number(weather.hourly.weather_code[index])} />
+                    <strong>{Math.round(Number(weather.hourly.temperature_2m[index]))}°</strong>
+                    <span className="rain">💧 {Math.round(Number(weather.hourly.precipitation_probability[index]))}%</span>
+                  </article>
+                ))}
+              </div>
+            </section>
+
             <section className="panel precip-panel">
               <div className="section-heading">
                 <div>
@@ -564,26 +584,6 @@ export default function Home() {
                     </div>
                   );
                 })}
-              </div>
-            </section>
-
-            <section className="panel">
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">Next 24 hours</p>
-                  <h2>Hourly forecast</h2>
-                </div>
-                <span>Scroll to explore →</span>
-              </div>
-              <div className="hourly-list">
-                {hourly.map(({ time, index }, displayIndex) => (
-                  <article className="hour-card" key={time}>
-                    <p>{displayIndex === 0 ? "Now" : formatHour(time)}</p>
-                    <WeatherMark code={Number(weather.hourly.weather_code[index])} />
-                    <strong>{Math.round(Number(weather.hourly.temperature_2m[index]))}°</strong>
-                    <span className="rain">💧 {Math.round(Number(weather.hourly.precipitation_probability[index]))}%</span>
-                  </article>
-                ))}
               </div>
             </section>
 
@@ -732,14 +732,9 @@ export default function Home() {
 
                 <article className="station-card">
                   <div>
-                    <p className="eyebrow">Tempest vs forecast</p>
-                    <h2>Compare local observations</h2>
-                    <div className="forecast-reference">
-                      <span><small>Forecast temperature</small><strong>{Math.round(Number(weather.current.temperature_2m))}°</strong></span>
-                      <span><small>Forecast wind</small><strong>{Math.round(Number(weather.current.wind_speed_10m))} mph</strong></span>
-                      <span><small>Forecast pressure</small><strong>{(Number(weather.current.surface_pressure) * 0.02953).toFixed(2)} inHg</strong></span>
-                    </div>
-                    <p>Open your station beside these forecast values for a hyperlocal comparison.</p>
+                    <p className="eyebrow">Personal weather station</p>
+                    <h2>Johnston observations</h2>
+                    <p>See detailed, hyperlocal temperature, wind, rainfall, pressure, and lightning readings from your Tempest station.</p>
                   </div>
                   <a href={stationUrl} target="_blank" rel="noreferrer">
                     View station data <span>↗</span>

@@ -404,11 +404,6 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .station-card h2 { margin: 4px 0 9px; }
 .station-card p:not(.eyebrow) { margin: 0; max-width: 260px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .station-card > a { align-self: flex-start; color: var(--teal); font-size: 13px; font-weight: 800; text-decoration: none; border-bottom: 1px solid rgba(8, 127, 140, .35); padding-bottom: 4px; }
-.forecast-reference { display: grid; grid-template-columns: 1fr; gap: 7px; margin: 15px 0; }
-.forecast-reference span { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 7px; border-bottom: 1px solid rgba(20, 97, 110, .13); }
-.forecast-reference small { color: var(--muted); font-size: 10px; }
-.forecast-reference strong { font: 700 15px Georgia, serif; }
-
 .loading-card { min-height: 440px; display: grid; place-content: center; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 .loading-card h2 { margin: 18px 0 8px; }
 .loading-card p { color: var(--muted); }
