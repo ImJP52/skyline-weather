@@ -313,6 +313,31 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .radar-sweep { width: 110px; height: 110px; transform-origin: 0 0; background: conic-gradient(from 270deg, rgba(71, 196, 167, .55), transparent 22%); border-radius: 50%; animation: sweep 5s linear infinite; }
 @keyframes sweep { to { transform: rotate(360deg) translate(-50%, -50%); } }
 
+.satellite-card {
+  min-height: 230px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #172f4b 0%, #155f73 58%, #4b97a6 100%);
+  color: white;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+}
+.satellite-copy { padding: 28px 0 28px 28px; position: relative; z-index: 2; }
+.satellite-copy .eyebrow { color: #a9e8de; }
+.satellite-copy h2 { margin-bottom: 12px; }
+.satellite-copy > p:not(.eyebrow) { max-width: 220px; color: #d4e5e9; font-size: 12px; line-height: 1.5; }
+.satellite-copy a { display: inline-block; margin-top: 10px; color: #fff; font-size: 13px; font-weight: 800; text-decoration: none; border-bottom: 1px solid #a9e8de; padding-bottom: 4px; }
+.satellite-visual { position: relative; min-height: 230px; overflow: hidden; background: radial-gradient(circle at 48% 52%, rgba(116, 205, 202, .72), rgba(16, 62, 91, .15) 58%, transparent 70%); }
+.satellite-orbit { position: absolute; width: 185px; height: 185px; left: 50%; top: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(222, 248, 244, .28); border-radius: 50%; box-shadow: inset 0 0 28px rgba(171, 233, 226, .13); }
+.satellite-orbit::after { content: ""; position: absolute; width: 8px; height: 8px; right: 19px; top: 28px; border-radius: 50%; background: #d8fff6; box-shadow: 0 0 12px #d8fff6; }
+.satellite-cloud { position: absolute; display: block; height: 18px; border-radius: 999px; background: rgba(237, 250, 250, .55); filter: blur(1px); transform: rotate(-14deg); }
+.satellite-cloud::before, .satellite-cloud::after { content: ""; position: absolute; border-radius: 50%; background: inherit; }
+.satellite-cloud::before { width: 28px; height: 28px; left: 18px; bottom: 2px; }
+.satellite-cloud::after { width: 38px; height: 38px; right: 15px; bottom: 1px; }
+.satellite-cloud--one { width: 105px; left: 12%; top: 35%; }
+.satellite-cloud--two { width: 125px; left: 35%; top: 61%; opacity: .72; }
+.satellite-cloud--three { width: 78px; left: 53%; top: 22%; opacity: .42; }
+
 .loading-card { min-height: 440px; display: grid; place-content: center; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 .loading-card h2 { margin: 18px 0 8px; }
 .loading-card p { color: var(--muted); }
@@ -350,6 +375,8 @@ footer p { margin: 0; }
   .condition { justify-content: center; }
   .radar-card { grid-template-columns: 1fr 0.65fr; }
   .radar-copy { padding-left: 22px; }
+  .satellite-card { grid-template-columns: 1fr 0.65fr; }
+  .satellite-copy { padding-left: 22px; }
   footer { flex-direction: column; padding-left: 15px; padding-right: 15px; }
 }
 

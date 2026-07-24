@@ -292,6 +292,8 @@ export default function Home() {
   const currentCode = weather ? Number(weather.current.weather_code) : 0;
   const currentInfo = weatherInfo(currentCode);
   const radarUrl = "https://radar.weather.gov/";
+  const satelliteUrl =
+    "https://www.star.nesdis.noaa.gov/GOES/sector_band.php?band=GEOCOLOR&length=24&sat=G19&sector=umv";
 
   return (
     <main>
@@ -527,6 +529,23 @@ export default function Home() {
                     <span className="radar-sweep" />
                   </div>
                 </article>
+
+                <article className="satellite-card">
+                  <div className="satellite-copy">
+                    <p className="eyebrow">GOES-East satellite</p>
+                    <h2>Upper Mississippi Valley</h2>
+                    <p>Watch NOAA’s latest GeoColor satellite images in a two-hour animation loop.</p>
+                    <a href={satelliteUrl} target="_blank" rel="noreferrer">
+                      Open animation loop <span>↗</span>
+                    </a>
+                  </div>
+                  <div className="satellite-visual" aria-hidden="true">
+                    <span className="satellite-orbit" />
+                    <span className="satellite-cloud satellite-cloud--one" />
+                    <span className="satellite-cloud satellite-cloud--two" />
+                    <span className="satellite-cloud satellite-cloud--three" />
+                  </div>
+                </article>
               </aside>
             </section>
           </>
@@ -534,7 +553,7 @@ export default function Home() {
       </div>
 
       <footer>
-        <p>Forecast data from Open‑Meteo · Alerts and radar from the National Weather Service</p>
+        <p>Forecast data from Open‑Meteo · Alerts and radar from the National Weather Service · Satellite imagery from NOAA</p>
         <p>Weather conditions can change quickly. Always follow official guidance during severe weather.</p>
       </footer>
     </main>
