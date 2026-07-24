@@ -294,6 +294,7 @@ export default function Home() {
   const radarUrl = "https://radar.weather.gov/";
   const satelliteUrl =
     "https://www.star.nesdis.noaa.gov/GOES/sector_band.php?band=GEOCOLOR&length=24&sat=G19&sector=umv";
+  const stationUrl = "https://tempestwx.com/station/38425/grid";
 
   return (
     <main>
@@ -545,6 +546,17 @@ export default function Home() {
                     <span className="satellite-cloud satellite-cloud--two" />
                     <span className="satellite-cloud satellite-cloud--three" />
                   </div>
+                </article>
+
+                <article className="station-card">
+                  <div>
+                    <p className="eyebrow">Personal weather station</p>
+                    <h2>Johnston observations</h2>
+                    <p>See detailed, hyperlocal readings from your Tempest station.</p>
+                  </div>
+                  <a href={stationUrl} target="_blank" rel="noreferrer">
+                    View station data <span>↗</span>
+                  </a>
                 </article>
               </aside>
             </section>

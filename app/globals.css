@@ -35,10 +35,11 @@ main::before {
   inset: 76px 0 auto;
   height: 510px;
   background:
-    linear-gradient(180deg, rgba(245, 249, 251, 0.3), rgba(245, 249, 251, 0.78) 68%, #f5f8fa 100%),
-    linear-gradient(90deg, rgba(232, 245, 249, 0.65), rgba(255, 255, 255, 0.08)),
+    linear-gradient(180deg, rgba(7, 29, 48, 0.12), rgba(18, 48, 66, 0.2) 58%, #f5f8fa 100%),
+    linear-gradient(90deg, rgba(8, 37, 57, 0.2), rgba(4, 27, 47, 0.04)),
     url("/des-moines-skyline.png") center 67% / cover no-repeat;
-  opacity: 0.78;
+  filter: brightness(0.72) saturate(1.12) contrast(1.08);
+  opacity: 0.94;
   pointer-events: none;
 }
 main > * { position: relative; z-index: 1; }
@@ -337,6 +338,25 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .satellite-cloud--one { width: 105px; left: 12%; top: 35%; }
 .satellite-cloud--two { width: 125px; left: 35%; top: 61%; opacity: .72; }
 .satellite-cloud--three { width: 78px; left: 53%; top: 22%; opacity: .42; }
+
+.station-card {
+  min-height: 150px;
+  padding: 26px 28px;
+  border: 1px solid rgba(20, 97, 110, .2);
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 88% 25%, rgba(94, 199, 186, .22), transparent 105px),
+    linear-gradient(135deg, rgba(255, 255, 255, .97), rgba(231, 247, 246, .96));
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+.station-card .eyebrow { color: var(--teal); }
+.station-card h2 { margin: 4px 0 9px; }
+.station-card p:not(.eyebrow) { margin: 0; max-width: 260px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.station-card > a { align-self: flex-start; color: var(--teal); font-size: 13px; font-weight: 800; text-decoration: none; border-bottom: 1px solid rgba(8, 127, 140, .35); padding-bottom: 4px; }
 
 .loading-card { min-height: 440px; display: grid; place-content: center; text-align: center; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
 .loading-card h2 { margin: 18px 0 8px; }
