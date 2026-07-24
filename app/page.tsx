@@ -215,16 +215,7 @@ export default function Home() {
 
   const currentCode = weather ? Number(weather.current.weather_code) : 0;
   const currentInfo = weatherInfo(currentCode);
-  const radarUrl = `https://radar.weather.gov/?settings=v1_${encodeURIComponent(
-    JSON.stringify({
-      agenda: { id: "local", center: [place.longitude, place.latitude], zoom: 8 },
-      animating: true,
-      base: "standard",
-      county: false,
-      cwa: false,
-      opacity: { alerts: 0.8, local: 0.6, localStations: 0.8, national: 0.6 },
-    }),
-  )}`;
+  const radarUrl = "https://radar.weather.gov/";
 
   return (
     <main>
@@ -423,7 +414,7 @@ export default function Home() {
                   <div className="radar-copy">
                     <p className="eyebrow">Live precipitation</p>
                     <h2>See what’s moving in</h2>
-                    <p>Open the official U.S. radar, centered near {place.name}.</p>
+                    <p>Open the official National Weather Service radar and choose your local view.</p>
                     <a href={radarUrl} target="_blank" rel="noreferrer">Open live radar <span>↗</span></a>
                   </div>
                   <div className="radar-visual" aria-hidden="true">
