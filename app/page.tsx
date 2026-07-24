@@ -18,6 +18,15 @@ type WeatherData = {
   daily: Record<string, (number | string)[]>;
 };
 
+type HistoryData = {
+  daily: Record<string, (number | string)[]>;
+};
+
+type ForecastDiscussion = {
+  issued?: string;
+  messages: string[];
+};
+
 type Alert = {
   id: string;
   properties: {
@@ -149,6 +158,8 @@ export default function Home() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [spcOutlook, setSpcOutlook] = useState<SpcOutlook | null>(null);
+  const [discussion, setDiscussion] = useState<ForecastDiscussion | null>(null);
+  const [history, setHistory] = useState<HistoryData | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,7 +179,7 @@ export default function Home() {
         current:
           "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         hourly:
-          "temperature_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m,uv_index",
+          "temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,uv_index",
         daily:
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max",
         temperature_unit: "fahrenheit",
@@ -200,13 +211,69 @@ export default function Home() {
           .then((response) => (response.ok ? response.json() : { features: [] }))
           .catch(() => ({ features: [] }));
 
-        const [weatherResponse, alertResponse, spcResponse] = await Promise.all([
+        const discussionRequest = fetch(
+          "https://api.weather.gov/products/types/AFD/locations/DMX",
+          { signal: controller.signal, headers: { Accept: "application/ld+json" } },
+        )
+          .then(async (response) => {
+            if (!response.ok) return null;
+            const list = await response.json();
+            const latest = list["@graph"]?.[0];
+            if (!latest?.id) return null;
+            const productResponse = await fetch(`https://api.weather.gov/products/${latest.id}`, {
+              signal: controller.signal,
+              headers: { Accept: "application/ld+json" },
+            });
+            if (!productResponse.ok) return null;
+            const product = await productResponse.json();
+            const text = String(product.productText ?? "");
+            const keySection = text.match(/\.KEY MESSAGES\.\.\.([\s\S]*?)&&/i)?.[1] ?? "";
+            const messages = keySection
+              .split(/\n\s*-\s+/)
+              .map((message: string) => message.replace(/\s+/g, " ").trim())
+              .filter(Boolean)
+              .slice(0, 3);
+            return {
+              issued: product.issuanceTime ?? latest.issuanceTime,
+              messages,
+            };
+          })
+          .catch(() => null);
+
+        const now = new Date();
+        const yesterday = new Date(now);
+        yesterday.setDate(now.getDate() - 1);
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const dateString = (date: Date) =>
+          `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+        const historyParams = new URLSearchParams({
+          latitude: String(place.latitude),
+          longitude: String(place.longitude),
+          start_date: dateString(monthStart),
+          end_date: dateString(yesterday),
+          daily: "temperature_2m_max,temperature_2m_min,precipitation_sum",
+          temperature_unit: "fahrenheit",
+          precipitation_unit: "inch",
+          timezone: "auto",
+        });
+        const historyRequest = fetch(
+          `https://historical-forecast-api.open-meteo.com/v1/forecast?${historyParams}`,
+          { signal: controller.signal },
+        )
+          .then((response) => (response.ok ? response.json() : null))
+          .catch(() => null);
+
+        const [weatherResponse, alertResponse, spcResponse, discussionResponse, historyResponse] = await Promise.all([
           weatherRequest,
           alertRequest,
           spcRequest,
+          discussionRequest,
+          historyRequest,
         ]);
         setWeather(weatherResponse);
         setAlerts(alertResponse.features ?? []);
+        setDiscussion(discussionResponse);
+        setHistory(historyResponse);
         const point: [number, number] = [place.longitude, place.latitude];
         const matchingOutlooks = (spcResponse.features ?? [])
           .filter((feature: { geometry: { type: string; coordinates: number[][][] | number[][][][] } }) =>
@@ -291,6 +358,37 @@ export default function Home() {
 
   const currentCode = weather ? Number(weather.current.weather_code) : 0;
   const currentInfo = weatherInfo(currentCode);
+  const nextTwelveHours = hourly.slice(0, 12);
+  const peakRainHour = nextTwelveHours.reduce(
+    (peak, hour) =>
+      !weather ||
+      Number(weather.hourly.precipitation_probability[hour.index]) <=
+        Number(weather.hourly.precipitation_probability[peak.index])
+        ? peak
+        : hour,
+    nextTwelveHours[0] ?? { time: "", index: 0 },
+  );
+  const peakRainChance = weather
+    ? Math.round(Number(weather.hourly.precipitation_probability[peakRainHour.index] ?? 0))
+    : 0;
+  const stormHour = hourly.find(({ index }) =>
+    [95, 96, 99].includes(Number(weather?.hourly.weather_code[index])),
+  );
+  const todaySummary = weather
+    ? `${currentInfo.label} now. High near ${Math.round(Number(weather.daily.temperature_2m_max[0]))}°. ${
+        peakRainChance >= 20
+          ? `Rain chances peak near ${peakRainChance}% around ${formatHour(peakRainHour.time)}.`
+          : "Little precipitation is expected through the next 12 hours."
+      } Winds may gust to ${Math.round(Number(weather.current.wind_gusts_10m))} mph.`
+    : "";
+  const historyLength = history?.daily.time?.length ?? 0;
+  const yesterdayIndex = Math.max(0, historyLength - 1);
+  const monthRain = history
+    ? (history.daily.precipitation_sum as (number | string)[]).reduce(
+        (sum, value) => sum + Number(value || 0),
+        0,
+      )
+    : 0;
   const radarUrl = "https://radar.weather.gov/";
   const satelliteUrl =
     "https://www.star.nesdis.noaa.gov/GOES/sector_band.php?band=GEOCOLOR&length=24&sat=G19&sector=umv";
@@ -356,6 +454,14 @@ export default function Home() {
           </section>
         ) : weather ? (
           <>
+            <section className="briefing-card">
+              <div>
+                <p className="eyebrow">Today at a glance</p>
+                <h2>{todaySummary}</h2>
+              </div>
+              <span className="briefing-badge">{currentInfo.icon} Local briefing</span>
+            </section>
+
             <section className="hero-grid">
               <article className="current-card">
                 <div className="current-main">
@@ -398,6 +504,66 @@ export default function Home() {
                   <strong>{Math.round(Number(weather.hourly.uv_index[currentHourIndex]))}</strong>
                   <small>Peak today {Math.round(Number(weather.daily.uv_index_max[0]))}</small>
                 </article>
+              </div>
+            </section>
+
+            <section className="insight-grid">
+              <article className="panel discussion-panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">NWS Des Moines</p>
+                    <h2>Forecaster key messages</h2>
+                  </div>
+                  {discussion?.issued && (
+                    <span>Issued {new Date(discussion.issued).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
+                  )}
+                </div>
+                {discussion?.messages.length ? (
+                  <ul>
+                    {discussion.messages.map((message) => <li key={message}>{message}</li>)}
+                  </ul>
+                ) : (
+                  <p className="muted-copy">The latest discussion is temporarily unavailable. Open the official report below.</p>
+                )}
+                <a className="text-link" href="https://forecast.weather.gov/product.php?issuedby=DMX&product=AFD&site=DMX" target="_blank" rel="noreferrer">
+                  Read the full forecast discussion <span>↗</span>
+                </a>
+              </article>
+
+              <article className={`panel lightning-panel ${stormHour ? "lightning-panel--active" : ""}`}>
+                <div className="lightning-icon" aria-hidden="true">ϟ</div>
+                <p className="eyebrow">Lightning awareness</p>
+                <h2>{stormHour ? `Thunderstorms possible around ${formatHour(stormHour.time)}` : "No thunderstorms indicated soon"}</h2>
+                <p>{stormHour ? "Be ready to move indoors if you hear thunder or receive a warning." : "The hourly forecast does not indicate thunderstorms in the next 24 hours."}</p>
+                <a className="text-link" href="https://www.weather.gov/safety/lightning" target="_blank" rel="noreferrer">
+                  Review NWS lightning safety <span>↗</span>
+                </a>
+              </article>
+            </section>
+
+            <section className="panel precip-panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Planning ahead</p>
+                  <h2>12-hour precipitation timeline</h2>
+                </div>
+                <span>Chance · expected amount</span>
+              </div>
+              <div className="precip-chart">
+                {nextTwelveHours.map(({ time, index }, displayIndex) => {
+                  const chance = Math.round(Number(weather.hourly.precipitation_probability[index]));
+                  const amount = Number(weather.hourly.precipitation[index]);
+                  return (
+                    <div className="precip-column" key={time}>
+                      <span className="precip-chance">{chance}%</span>
+                      <div className="precip-track">
+                        <span style={{ height: `${Math.max(4, chance)}%` }} />
+                      </div>
+                      <strong>{displayIndex === 0 ? "Now" : formatHour(time)}</strong>
+                      <small>{amount > 0 ? `${amount.toFixed(2)}″` : "—"}</small>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -447,6 +613,22 @@ export default function Home() {
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="history-strip">
+                  <div>
+                    <p className="eyebrow">Recent history</p>
+                    <h2>Yesterday & this month</h2>
+                  </div>
+                  {history ? (
+                    <div className="history-stats">
+                      <span><small>Yesterday</small><strong>{Math.round(Number(history.daily.temperature_2m_max[yesterdayIndex]))}° / {Math.round(Number(history.daily.temperature_2m_min[yesterdayIndex]))}°</strong></span>
+                      <span><small>Yesterday’s rain</small><strong>{Number(history.daily.precipitation_sum[yesterdayIndex]).toFixed(2)}″</strong></span>
+                      <span><small>Month to date</small><strong>{monthRain.toFixed(2)}″ rain</strong></span>
+                    </div>
+                  ) : (
+                    <p className="muted-copy">Recent history is temporarily unavailable.</p>
+                  )}
                 </div>
               </article>
 
@@ -550,9 +732,14 @@ export default function Home() {
 
                 <article className="station-card">
                   <div>
-                    <p className="eyebrow">Personal weather station</p>
-                    <h2>Johnston observations</h2>
-                    <p>See detailed, hyperlocal readings from your Tempest station.</p>
+                    <p className="eyebrow">Tempest vs forecast</p>
+                    <h2>Compare local observations</h2>
+                    <div className="forecast-reference">
+                      <span><small>Forecast temperature</small><strong>{Math.round(Number(weather.current.temperature_2m))}°</strong></span>
+                      <span><small>Forecast wind</small><strong>{Math.round(Number(weather.current.wind_speed_10m))} mph</strong></span>
+                      <span><small>Forecast pressure</small><strong>{(Number(weather.current.surface_pressure) * 0.02953).toFixed(2)} inHg</strong></span>
+                    </div>
+                    <p>Open your station beside these forecast values for a hyperlocal comparison.</p>
                   </div>
                   <a href={stationUrl} target="_blank" rel="noreferrer">
                     View station data <span>↗</span>
