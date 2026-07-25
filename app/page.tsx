@@ -371,9 +371,6 @@ export default function Home() {
   const peakRainChance = weather
     ? Math.round(Number(weather.hourly.precipitation_probability[peakRainHour.index] ?? 0))
     : 0;
-  const stormHour = hourly.find(({ index }) =>
-    [95, 96, 99].includes(Number(weather?.hourly.weather_code[index])),
-  );
   const todaySummary = weather
     ? `${currentInfo.label} now. High near ${Math.round(Number(weather.daily.temperature_2m_max[0]))}°. ${
         peakRainChance >= 20
@@ -530,14 +527,20 @@ export default function Home() {
                 </a>
               </article>
 
-              <article className={`panel lightning-panel ${stormHour ? "lightning-panel--active" : ""}`}>
-                <div className="lightning-icon" aria-hidden="true">ϟ</div>
-                <p className="eyebrow">Lightning awareness</p>
-                <h2>{stormHour ? `Thunderstorms possible around ${formatHour(stormHour.time)}` : "No thunderstorms indicated soon"}</h2>
-                <p>{stormHour ? "Be ready to move indoors if you hear thunder or receive a warning." : "The hourly forecast does not indicate thunderstorms in the next 24 hours."}</p>
-                <a className="text-link" href="https://www.weather.gov/safety/lightning" target="_blank" rel="noreferrer">
-                  Review NWS lightning safety <span>↗</span>
-                </a>
+              <article className="panel sun-panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">Daylight</p>
+                    <h2>Sunrise & sunset</h2>
+                  </div>
+                </div>
+                <div className="sun-arc">
+                  <span className="sun-dot">☀</span>
+                </div>
+                <div className="sun-times">
+                  <div><span>Sunrise</span><strong>{formatClock(String(weather.daily.sunrise[0]))}</strong></div>
+                  <div><span>Sunset</span><strong>{formatClock(String(weather.daily.sunset[0]))}</strong></div>
+                </div>
               </article>
             </section>
 
@@ -633,22 +636,6 @@ export default function Home() {
               </article>
 
               <aside className="side-stack">
-                <article className="panel sun-panel">
-                  <div className="section-heading">
-                    <div>
-                      <p className="eyebrow">Daylight</p>
-                      <h2>Sunrise & sunset</h2>
-                    </div>
-                  </div>
-                  <div className="sun-arc">
-                    <span className="sun-dot">☀</span>
-                  </div>
-                  <div className="sun-times">
-                    <div><span>Sunrise</span><strong>{formatClock(String(weather.daily.sunrise[0]))}</strong></div>
-                    <div><span>Sunset</span><strong>{formatClock(String(weather.daily.sunset[0]))}</strong></div>
-                  </div>
-                </article>
-
                 <article className={`panel alerts-panel ${alerts.length ? "alerts-panel--active" : ""}`}>
                   <div className="alert-title">
                     <span className="alert-icon">{alerts.length ? "!" : "✓"}</span>

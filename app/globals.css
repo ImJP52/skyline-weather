@@ -245,13 +245,6 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .discussion-panel li::before { content: "→"; position: absolute; left: 0; color: var(--teal); font-weight: 900; }
 .muted-copy { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .text-link { color: var(--teal); font-size: 12px; font-weight: 800; text-decoration: none; border-bottom: 1px solid rgba(8,127,140,.35); padding-bottom: 3px; }
-.lightning-panel { position: relative; overflow: hidden; }
-.lightning-panel .lightning-icon { position: absolute; right: 22px; top: 17px; color: #8ba1ae; font: 700 39px Georgia, serif; }
-.lightning-panel h2 { max-width: 290px; margin: 3px 0 12px; font-size: 20px; }
-.lightning-panel > p:not(.eyebrow) { color: var(--muted); font-size: 12px; line-height: 1.5; }
-.lightning-panel--active { border-color: #e8ba60; background: #fff9e9; }
-.lightning-panel--active .lightning-icon { color: #d48900; }
-
 .precip-panel { margin-bottom: 18px; }
 .precip-chart { display: grid; grid-template-columns: repeat(12, minmax(45px, 1fr)); gap: 8px; min-height: 190px; overflow-x: auto; padding: 4px 0 8px; }
 .precip-column { min-width: 48px; display: grid; grid-template-rows: 22px 100px 18px 16px; gap: 5px; align-items: end; justify-items: center; }
@@ -279,7 +272,7 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .history-stats small { margin-bottom: 6px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .history-stats strong { font: 700 16px Georgia, serif; }
 .side-stack { display: flex; flex-direction: column; gap: 18px; }
-.sun-panel { min-height: 238px; }
+.sun-panel { min-height: 220px; }
 .sun-arc {
   height: 65px;
   margin: 13px 8px 0;
