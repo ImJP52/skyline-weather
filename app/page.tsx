@@ -359,6 +359,19 @@ export default function Home() {
   const currentCode = weather ? Number(weather.current.weather_code) : 0;
   const currentInfo = weatherInfo(currentCode);
   const nextTwelveHours = hourly.slice(0, 12);
+  const trendTemperatures = weather
+    ? nextTwelveHours.map(({ index }) => Number(weather.hourly.temperature_2m[index]))
+    : [];
+  const trendMinimum = trendTemperatures.length ? Math.min(...trendTemperatures) : 0;
+  const trendMaximum = trendTemperatures.length ? Math.max(...trendTemperatures) : 0;
+  const trendRange = Math.max(1, trendMaximum - trendMinimum);
+  const trendPoints = trendTemperatures
+    .map((temperature, index) => {
+      const x = trendTemperatures.length > 1 ? (index / (trendTemperatures.length - 1)) * 1100 : 0;
+      const y = 125 - ((temperature - trendMinimum) / trendRange) * 90;
+      return `${x},${y}`;
+    })
+    .join(" ");
   const peakRainHour = nextTwelveHours.reduce(
     (peak, hour) =>
       !weather ||
@@ -551,6 +564,29 @@ export default function Home() {
                   <h2>Hourly forecast</h2>
                 </div>
                 <span>Scroll to explore →</span>
+              </div>
+              <div className="temperature-trend">
+                <div className="temperature-trend__scale">
+                  <strong>{Math.round(trendMaximum)}°</strong>
+                  <span>{Math.round(trendMinimum)}°</span>
+                </div>
+                <svg
+                  viewBox="0 0 1100 150"
+                  preserveAspectRatio="none"
+                  role="img"
+                  aria-label={`Temperature trend from ${Math.round(trendMinimum)} to ${Math.round(trendMaximum)} degrees over the next 12 hours`}
+                >
+                  <polyline points={trendPoints} />
+                  {trendTemperatures.map((temperature, index) => {
+                    const [x, y] = trendPoints.split(" ")[index].split(",");
+                    return <circle key={`${nextTwelveHours[index].time}-${temperature}`} cx={x} cy={y} r="5" />;
+                  })}
+                </svg>
+                <div className="temperature-trend__labels">
+                  {nextTwelveHours.map(({ time }, index) => (
+                    <span key={time}>{index === 0 ? "Now" : formatHour(time)}</span>
+                  ))}
+                </div>
               </div>
               <div className="hourly-list">
                 {hourly.map(({ time, index }, displayIndex) => (
