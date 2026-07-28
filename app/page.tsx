@@ -179,7 +179,7 @@ export default function Home() {
         current:
           "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         hourly:
-          "temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,uv_index",
+          "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,uv_index",
         daily:
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max",
         temperature_unit: "fahrenheit",
@@ -561,6 +561,30 @@ export default function Home() {
                     <span className="rain">💧 {Math.round(Number(weather.hourly.precipitation_probability[index]))}%</span>
                   </article>
                 ))}
+              </div>
+            </section>
+
+            <section className="panel humidity-panel">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Moisture through the day</p>
+                  <h2>12-hour relative humidity</h2>
+                </div>
+                <span>Percent relative humidity</span>
+              </div>
+              <div className="humidity-chart">
+                {nextTwelveHours.map(({ time, index }, displayIndex) => {
+                  const humidity = Math.round(Number(weather.hourly.relative_humidity_2m[index]));
+                  return (
+                    <div className="humidity-column" key={time}>
+                      <span className="humidity-value">{humidity}%</span>
+                      <div className="humidity-track">
+                        <span style={{ height: `${humidity}%` }} />
+                      </div>
+                      <strong>{displayIndex === 0 ? "Now" : formatHour(time)}</strong>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
