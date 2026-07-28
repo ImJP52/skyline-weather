@@ -399,7 +399,8 @@ export default function Home() {
         0,
       )
     : 0;
-  const radarUrl = "https://radar.weather.gov/";
+  const radarUrl =
+    "https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJsb2NhbCIsImNlbnRlciI6Wy05My43MjI4LDQxLjczMTFdLCJ6b29tIjo3LCJmaWx0ZXIiOiJXU1ItODhEIiwibGF5ZXIiOiJzcl9icmVmIiwic3RhdGlvbiI6IktETVgiLCJ0cmFuc3BhcmVudCI6dHJ1ZSwiYWxlcnRzT3ZlcmxheSI6dHJ1ZSwic3RhdGlvbkljb25zT3ZlcmxheSI6dHJ1ZX0sImFuaW1hdGluZyI6ZmFsc2UsImJhc2UiOiJzdGFuZGFyZCIsImNvdW50eSI6ZmFsc2UsImN3YSI6ZmFsc2UsInN0YXRlIjpmYWxzZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuNn19";
   const satelliteUrl =
     "https://www.star.nesdis.noaa.gov/GOES/sector_band.php?band=GEOCOLOR&length=24&sat=G19&sector=umv";
   const stationUrl = "https://tempestwx.com/station/38425/grid";
@@ -749,8 +750,8 @@ export default function Home() {
                   <div className="radar-copy">
                     <p className="eyebrow">Live precipitation</p>
                     <h2>See what’s moving in</h2>
-                    <p>Open the official National Weather Service radar and choose your local view.</p>
-                    <a href={radarUrl} target="_blank" rel="noreferrer">Open live radar <span>↗</span></a>
+                    <p>Open the enhanced KDMX base reflectivity view, centered on Johnston and central Iowa.</p>
+                    <a href={radarUrl} target="_blank" rel="noreferrer">Open high-resolution radar <span>↗</span></a>
                   </div>
                   <div className="radar-visual" aria-hidden="true">
                     <span className="radar-center" />
