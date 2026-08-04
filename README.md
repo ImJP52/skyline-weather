@@ -1,6 +1,6 @@
-# Skyline Weather
+# Cody Sky
 
-A responsive personal weather dashboard that starts in Johnston, Iowa and works for locations worldwide.
+Justin Cody’s responsive personal Des Moines weather dashboard. It starts in Johnston, Iowa and works for locations worldwide.
 
 ## Features
 

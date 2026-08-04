@@ -408,9 +408,12 @@ export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Skyline Weather home">
-          <span className="brand-mark">S</span>
-          <span>Skyline Weather</span>
+        <a className="brand" href="#top" aria-label="Cody Sky home">
+          <span className="brand-mark">C</span>
+          <span className="brand-copy">
+            <strong>Cody Sky</strong>
+            <small>Justin Cody’s Des Moines Weather</small>
+          </span>
         </a>
         <form className="search" onSubmit={search} role="search">
           <span className="search-icon" aria-hidden="true">⌕</span>
@@ -795,7 +798,7 @@ export default function Home() {
       </div>
 
       <footer>
-        <p>Forecast data from Open‑Meteo · Alerts and radar from the National Weather Service · Satellite imagery from NOAA</p>
+        <p>Cody Sky · A personal Des Moines weather dashboard by Justin Cody</p>
         <p>Weather conditions can change quickly. Always follow official guidance during severe weather.</p>
       </footer>
     </main>
