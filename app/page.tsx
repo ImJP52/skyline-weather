@@ -444,6 +444,13 @@ export default function Home() {
         <span className="data-source">Live data · Open‑Meteo</span>
       </header>
 
+      <section className="brand-hero" aria-label="Cody Sky — Justin Cody’s Des Moines Weather">
+        <img
+          src="/og.png"
+          alt="Cody Sky over an illustrated Des Moines skyline at sunset"
+        />
+      </section>
+
       <div className="dashboard" id="top">
         {error && (
           <div className="notice notice--error" role="alert">

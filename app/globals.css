@@ -27,25 +27,23 @@ a { color: inherit; }
 
 main {
   min-height: 100vh;
-  position: relative;
   background:
     radial-gradient(circle at 80% 7%, rgba(57, 123, 153, .16), transparent 24rem),
     linear-gradient(180deg, #faf9f5 0, #f4f2ed 40rem, #f3f1eb 100%);
 }
-main::before {
-  content: "";
-  position: absolute;
-  inset: 76px 0 auto;
-  height: 340px;
-  background:
-    linear-gradient(180deg, rgba(10, 28, 46, .08), rgba(19, 36, 58, .2) 58%, #f3f1eb 100%),
-    linear-gradient(90deg, rgba(8, 37, 57, .16), rgba(4, 27, 47, .02)),
-    url("/des-moines-skyline.png") center 58% / cover no-repeat;
-  filter: brightness(.78) saturate(1.16) contrast(1.06);
-  opacity: 1;
-  pointer-events: none;
+
+.brand-hero {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 4px solid var(--sun);
+  background: linear-gradient(90deg, #172a42, #274b63 50%, #172a42);
 }
-main > * { position: relative; z-index: 1; }
+.brand-hero img {
+  display: block;
+  width: min(100%, 648px);
+  height: auto;
+}
 
 .site-header {
   height: 76px;
@@ -147,9 +145,9 @@ main > * { position: relative; z-index: 1; }
 
 .dashboard { max-width: 1220px; margin: auto; padding: 38px 24px 70px; }
 .location-bar { display: flex; justify-content: space-between; align-items: end; margin-bottom: 28px; }
-.location-bar { color: #fff; text-shadow: 0 2px 16px rgba(4, 26, 43, .52); }
-.location-bar .eyebrow { color: var(--sun); }
-.location-bar .updated { color: #e6f2f5; }
+.location-bar { color: var(--ink); }
+.location-bar .eyebrow { color: var(--teal); }
+.location-bar .updated { color: var(--muted); }
 .eyebrow {
   margin: 0 0 7px;
   color: var(--teal);
