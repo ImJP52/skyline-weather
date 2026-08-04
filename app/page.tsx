@@ -446,7 +446,7 @@ export default function Home() {
 
       <section className="brand-hero" aria-label="Cody Sky — Justin Cody’s Des Moines Weather">
         <img
-          src="/og.png"
+          src="./og.png"
           alt="Cody Sky over an illustrated Des Moines skyline at sunset"
         />
       </section>
