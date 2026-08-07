@@ -42,9 +42,9 @@ main {
 .brand-hero img {
   display: block;
   width: min(100%, 1220px);
-  height: clamp(220px, 39vw, 480px);
+  height: clamp(110px, 21vw, 260px);
   object-fit: cover;
-  object-position: center 48%;
+  object-position: center bottom;
 }
 
 .site-header {
@@ -85,7 +85,6 @@ main {
 }
 .brand-copy { display: flex; flex-direction: column; gap: 1px; line-height: 1; }
 .brand-copy strong { font-size: 18px; letter-spacing: -.035em; }
-.brand-copy small { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; white-space: nowrap; }
 .data-source {
   justify-self: end;
   color: var(--muted);

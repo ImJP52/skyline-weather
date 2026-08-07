@@ -479,10 +479,9 @@ export default function Home() {
     <main>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Heartland WeatherOps home">
-          <span className="brand-mark">C</span>
+          <span className="brand-mark">H</span>
           <span className="brand-copy">
             <strong>Heartland WeatherOps</strong>
-            <small>Justin Cody’s Des Moines Weather</small>
           </span>
         </a>
         <form className="search" onSubmit={search} role="search">
@@ -514,10 +513,10 @@ export default function Home() {
         <span className="data-source">Live data · Open‑Meteo</span>
       </header>
 
-      <section className="brand-hero" aria-label="Heartland WeatherOps — Justin Cody’s Des Moines Weather">
+      <section className="brand-hero" aria-label="Des Moines skyline">
         <img
           src="./og.png"
-          alt="Heartland WeatherOps over the Des Moines skyline at sunset"
+          alt="Des Moines skyline at sunset"
         />
       </section>
 
