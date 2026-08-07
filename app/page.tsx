@@ -671,6 +671,14 @@ export default function Home() {
   const pressureNow = Number(weather?.hourly.pressure_msl[currentHourIndex] ?? 0);
   const pressureLater = Number(weather?.hourly.pressure_msl[currentHourIndex + 3] ?? pressureNow);
   const pressureChange = (pressureLater - pressureNow) * 0.02953;
+  const isNightHour = (time: string) => {
+    if (!weather) return false;
+    const dayIndex = (weather.daily.time as string[]).findIndex((day) => day === time.slice(0, 10));
+    if (dayIndex < 0) return false;
+    const sunrise = String(weather.daily.sunrise[dayIndex]);
+    const sunset = String(weather.daily.sunset[dayIndex]);
+    return time < sunrise || time >= sunset;
+  };
   const todaySummary = weather
     ? `${typeof nws?.observation?.textDescription === "string" ? nws.observation.textDescription : currentInfo.label} now. High near ${Math.round(primaryHigh)}°. ${
         peakRainChance >= 20
@@ -842,14 +850,21 @@ export default function Home() {
                     const rainChance = Number(weather.hourly.precipitation_probability[index]);
                     const wind = Number(weather.hourly.wind_speed_10m[index]);
                     const gust = Number(weather.hourly.wind_gusts_10m[index]);
+                    const windDegrees = Number(weather.hourly.wind_direction_10m[index]);
+                    const code = Number(weather.hourly.weather_code[index]);
+                    const showMoon = isNightHour(time) && code <= 2;
                     return (
                       <article className="meteogram-hour" key={time}>
                         <strong className="met-time">{displayIndex === 0 ? "Now" : formatHour(time)}</strong>
-                        <WeatherMark code={Number(weather.hourly.weather_code[index])} />
+                        {showMoon ? <span className="weather-mark night-mark" aria-label="Clear night">☾</span> : <WeatherMark code={code} />}
                         <div className="met-temp"><strong>{Math.round(temperature)}°</strong><span>DP {Math.round(dewPoint)}°</span></div>
                         <div className="met-rain-track"><span style={{ height: `${Math.max(3, rainChance)}%` }} /></div>
                         <span className="met-rain">{Math.round(rainChance)}%</span>
-                        <span className="met-wind">{windDirection(Number(weather.hourly.wind_direction_10m[index]))}<strong>{Math.round(wind)}</strong><small>G{Math.round(gust)}</small></span>
+                        <span className="met-wind" title={`Wind from ${windDirection(windDegrees)}`}>
+                          <i className="wind-arrow" style={{ transform: `rotate(${windDegrees}deg)` }} aria-hidden="true">↑</i>
+                          <strong>{Math.round(wind)}</strong>
+                          <small>G{Math.round(gust)}</small>
+                        </span>
                       </article>
                     );
                   })}

@@ -218,7 +218,9 @@ main {
 .meteogram-hour { display: grid; justify-items: center; gap: 8px; padding: 12px 6px; border-right: 1px solid var(--line); background: linear-gradient(180deg, #f8fbfb, #fff); }
 .meteogram-hour:last-child { border: 0; }.met-time { font-size: 11px; }.met-temp { text-align: center; }.met-temp strong { display: block; font-size: 19px; }.met-temp span { color: var(--teal); font-size: 9px; font-weight: 700; }
 .met-rain-track { display: flex; align-items: end; width: 11px; height: 48px; border-radius: 5px; background: #edf3f5; overflow: hidden; }.met-rain-track span { width: 100%; border-radius: inherit; background: #4d98b5; }.met-rain { color: var(--blue); font-size: 9px; font-weight: 800; }
-.met-wind { display: grid; grid-template-columns: 1fr 1fr; align-items: baseline; gap: 2px 5px; color: var(--muted); font-size: 9px; }.met-wind strong { color: var(--ink); font-size: 14px; }.met-wind small { grid-column: 1 / -1; text-align: center; }
+.met-wind { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 2px 5px; color: var(--muted); font-size: 9px; }.met-wind strong { color: var(--ink); font-size: 14px; }.met-wind small { grid-column: 1 / -1; text-align: center; }
+.wind-arrow { display: inline-grid; place-items: center; width: 20px; height: 20px; color: var(--teal); font-size: 20px; font-style: normal; font-weight: 800; line-height: 1; transform-origin: center; }
+.night-mark { color: #314d78; font-family: Georgia, serif; filter: none; }
 .meteogram-legend { display: flex; flex-wrap: wrap; gap: 18px; color: var(--muted); font-size: 9px; text-transform: uppercase; }
 .enthusiast-bottom-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; }
 .technical-day { display: grid; grid-template-columns: 85px 1fr 70px 90px; gap: 12px; align-items: center; min-height: 48px; border-bottom: 1px solid var(--line); font-size: 11px; }.technical-day:last-child { border: 0; }.technical-day > span { color: var(--muted); }.technical-day b { text-align: right; }
