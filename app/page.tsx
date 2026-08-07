@@ -189,7 +189,7 @@ export default function Home() {
         current:
           "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         hourly:
-          "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,uv_index",
+          "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,uv_index",
         daily:
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max",
         temperature_unit: "fahrenheit",
@@ -442,6 +442,10 @@ export default function Home() {
       return `${x},${y}`;
     })
     .join(" ");
+  const hourlyWindSpeeds = weather
+    ? nextTwelveHours.map(({ index }) => Number(weather.hourly.wind_speed_10m[index]))
+    : [];
+  const maximumHourlyWind = Math.max(1, ...hourlyWindSpeeds);
   const peakRainHour = nextTwelveHours.reduce(
     (peak, hour) =>
       !weather ||
@@ -701,26 +705,26 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="panel precip-panel">
+            <section className="panel wind-panel">
               <div className="section-heading">
                 <div>
-                  <p className="eyebrow">Planning ahead</p>
-                  <h2>12-hour precipitation timeline</h2>
+                  <p className="eyebrow">Breeze through the day</p>
+                  <h2>12-hour wind forecast</h2>
                 </div>
-                <span>Chance · expected amount</span>
+                <span>Sustained wind · mph</span>
               </div>
-              <div className="precip-chart">
+              <div className="wind-chart">
                 {nextTwelveHours.map(({ time, index }, displayIndex) => {
-                  const chance = Math.round(Number(weather.hourly.precipitation_probability[index]));
-                  const amount = Number(weather.hourly.precipitation[index]);
+                  const speed = Math.round(Number(weather.hourly.wind_speed_10m[index]));
+                  const direction = windDirection(Number(weather.hourly.wind_direction_10m[index]));
                   return (
-                    <div className="precip-column" key={time}>
-                      <span className="precip-chance">{chance}%</span>
-                      <div className="precip-track">
-                        <span style={{ height: `${Math.max(4, chance)}%` }} />
+                    <div className="wind-column" key={time}>
+                      <span className="wind-speed">{speed} mph</span>
+                      <div className="wind-track">
+                        <span style={{ height: `${Math.max(6, (speed / maximumHourlyWind) * 100)}%` }} />
                       </div>
                       <strong>{displayIndex === 0 ? "Now" : formatHour(time)}</strong>
-                      <small>{amount > 0 ? `${amount.toFixed(2)}″` : "—"}</small>
+                      <small>{direction}</small>
                     </div>
                   );
                 })}

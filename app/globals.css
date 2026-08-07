@@ -261,7 +261,7 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .discussion-panel li::before { content: "→"; position: absolute; left: 0; color: var(--teal); font-weight: 900; }
 .muted-copy { color: var(--muted); font-size: 12px; line-height: 1.5; }
 .text-link { color: var(--teal); font-size: 12px; font-weight: 800; text-decoration: none; border-bottom: 1px solid rgba(8,127,140,.35); padding-bottom: 3px; }
-.precip-panel { margin-bottom: 18px; }
+.wind-panel { margin-bottom: 18px; }
 .humidity-panel { margin: 18px 0; }
 .humidity-chart { display: grid; grid-template-columns: repeat(12, minmax(45px, 1fr)); gap: 8px; min-height: 172px; overflow-x: auto; padding: 4px 0 8px; }
 .humidity-column { min-width: 48px; display: grid; grid-template-rows: 22px 100px 18px; gap: 5px; align-items: end; justify-items: center; }
@@ -269,13 +269,13 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .humidity-track { width: 24px; height: 100px; display: flex; align-items: end; border-radius: 6px 6px 2px 2px; background: #edf5f5; overflow: hidden; }
 .humidity-track span { display: block; width: 100%; min-height: 4px; border-radius: 5px 5px 0 0; background: linear-gradient(#91ddd6, var(--teal)); }
 .humidity-column strong { font-size: 10px; }
-.precip-chart { display: grid; grid-template-columns: repeat(12, minmax(45px, 1fr)); gap: 8px; min-height: 190px; overflow-x: auto; padding: 4px 0 8px; }
-.precip-column { min-width: 48px; display: grid; grid-template-rows: 22px 100px 18px 16px; gap: 5px; align-items: end; justify-items: center; }
-.precip-chance { color: var(--blue); font-size: 10px; font-weight: 800; }
-.precip-track { width: 24px; height: 100px; display: flex; align-items: end; border-radius: 6px 6px 2px 2px; background: #edf4f7; overflow: hidden; }
-.precip-track span { display: block; width: 100%; min-height: 4px; border-radius: 5px 5px 0 0; background: linear-gradient(#7cc8de, var(--blue)); }
-.precip-column strong { font-size: 10px; }
-.precip-column small { color: var(--muted); font-size: 9px; }
+.wind-chart { display: grid; grid-template-columns: repeat(12, minmax(50px, 1fr)); gap: 8px; min-height: 190px; overflow-x: auto; padding: 4px 0 8px; }
+.wind-column { min-width: 50px; display: grid; grid-template-rows: 22px 100px 18px 16px; gap: 5px; align-items: end; justify-items: center; }
+.wind-speed { color: var(--blue); font-size: 10px; font-weight: 800; white-space: nowrap; }
+.wind-track { width: 24px; height: 100px; display: flex; align-items: end; border-radius: 6px 6px 2px 2px; background: #edf4f7; overflow: hidden; }
+.wind-track span { display: block; width: 100%; min-height: 6px; border-radius: 5px 5px 0 0; background: linear-gradient(#8fc4d8, var(--navy)); }
+.wind-column strong { font-size: 10px; }
+.wind-column small { color: var(--muted); font-size: 9px; font-weight: 800; }
 
 .content-grid { display: grid; grid-template-columns: 1.55fr 0.85fr; gap: 18px; margin-top: 18px; }
 .forecast-panel { padding-bottom: 13px; }
