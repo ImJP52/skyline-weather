@@ -174,6 +174,7 @@ export default function Home() {
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
   const [updated, setUpdated] = useState("");
 
@@ -418,6 +419,62 @@ export default function Home() {
     setResults([]);
   };
 
+  const useMyLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setError("Location services are not supported on this device.");
+      return;
+    }
+
+    setLocating(true);
+    setError("");
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const latitude = Number(coords.latitude.toFixed(4));
+        const longitude = Number(coords.longitude.toFixed(4));
+        let nextPlace: Place = {
+          name: "Current location",
+          latitude,
+          longitude,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        };
+
+        try {
+          const response = await fetch(
+            `https://api.weather.gov/points/${latitude},${longitude}`,
+            { headers: { Accept: "application/geo+json" } },
+          );
+          if (response.ok) {
+            const point = await response.json();
+            const relative = point.properties?.relativeLocation?.properties;
+            nextPlace = {
+              ...nextPlace,
+              name: relative?.city || "Current location",
+              admin1: relative?.state,
+              country: "United States",
+              timezone: point.properties?.timeZone ?? nextPlace.timezone,
+            };
+          }
+        } catch {
+          // Coordinates are still enough to load weather if the place-name lookup fails.
+        } finally {
+          setQuery("");
+          setResults([]);
+          setPlace(nextPlace);
+          setLocating(false);
+        }
+      },
+      (locationError) => {
+        setLocating(false);
+        setError(
+          locationError.code === 1
+            ? "Location access was declined. Enable it in your browser settings or continue using search."
+            : "Your location could not be determined. Please try again or use search.",
+        );
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  };
+
   const currentHourIndex = useMemo(() => {
     if (!weather) return 0;
     const now = Date.now();
@@ -516,7 +573,18 @@ export default function Home() {
             </div>
           )}
         </form>
-        <span className="data-source">Live data · Open‑Meteo</span>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="location-button"
+            onClick={useMyLocation}
+            disabled={locating}
+          >
+            <span aria-hidden="true">◎</span>
+            {locating ? "Finding you…" : "Use my location"}
+          </button>
+          <span className="data-source">Live data · Open‑Meteo</span>
+        </div>
       </header>
 
       <section className="brand-hero" aria-label="Des Moines skyline">

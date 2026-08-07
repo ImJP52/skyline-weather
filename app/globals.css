@@ -86,12 +86,43 @@ main {
 .brand-copy { display: flex; flex-direction: column; gap: 1px; line-height: 1; }
 .brand-copy strong { font-size: 18px; letter-spacing: -.035em; }
 .data-source {
-  justify-self: end;
   color: var(--muted);
   font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.header-actions {
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.location-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid rgba(8, 127, 140, .3);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, transform .2s ease;
+}
+.location-button span { color: var(--teal); font-size: 17px; line-height: 1; }
+.location-button:hover, .location-button:focus-visible {
+  border-color: var(--teal);
+  background: var(--sky);
+  outline: none;
+  transform: translateY(-1px);
+}
+.location-button:disabled { opacity: .65; cursor: wait; transform: none; }
 
 .search { position: relative; display: flex; }
 .search input {
@@ -436,6 +467,7 @@ footer p { margin: 0; }
 
 @media (max-width: 900px) {
   .site-header { grid-template-columns: auto 1fr; height: auto; padding-top: 14px; padding-bottom: 14px; }
+  .header-actions { grid-column: 1 / -1; justify-self: stretch; align-items: stretch; }
   .data-source { display: none; }
   .hero-grid, .content-grid, .insight-grid { grid-template-columns: 1fr; }
   .current-card { min-height: 220px; }
@@ -445,6 +477,8 @@ footer p { margin: 0; }
   .site-header { display: flex; flex-wrap: wrap; gap: 12px; }
   .brand { width: 100%; }
   .search { width: 100%; }
+  .header-actions, .location-button { width: 100%; }
+  .location-button { justify-content: center; }
   .dashboard { padding: 34px 15px 55px; }
   .location-bar { align-items: start; gap: 14px; }
   .updated span { display: none; }
