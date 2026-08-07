@@ -139,6 +139,20 @@ const windDirection = (degrees: number) => {
   return points[Math.round(degrees / 45) % 8];
 };
 
+const alertIcon = (event: string) => {
+  const name = event.toLowerCase();
+  if (name.includes("tornado")) return "🌪️";
+  if (name.includes("thunderstorm")) return "⛈️";
+  if (name.includes("flood")) return "🌊";
+  if (name.includes("snow") || name.includes("winter") || name.includes("blizzard")) return "❄️";
+  if (name.includes("ice") || name.includes("freez")) return "🧊";
+  if (name.includes("wind")) return "💨";
+  if (name.includes("heat")) return "🌡️";
+  if (name.includes("fog")) return "🌫️";
+  if (name.includes("fire") || name.includes("red flag")) return "🔥";
+  return "⚠️";
+};
+
 const pointInRing = (point: [number, number], ring: number[][]) => {
   let inside = false;
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
@@ -792,9 +806,23 @@ export default function Home() {
               <span className={`confidence confidence--${confidence.toLowerCase()}`}>{confidence} forecast confidence</span>
             </section>
 
-            <section className="hazard-ribbon" aria-label="Hazard status">
-              <article className={alerts.length ? "hazard-item hazard-item--active" : "hazard-item"}>
-                <span>NWS alerts</span><strong>{alerts.length ? `${alerts.length} active` : "None active"}</strong>
+            <section className={alerts.length ? "hazard-ribbon hazard-ribbon--active" : "hazard-ribbon"} aria-label="Hazard status">
+              <article className={alerts.length ? "hazard-item hazard-item--active hazard-alert-list" : "hazard-item"}>
+                <span>NWS alerts</span>
+                {alerts.length ? (
+                  <div className="hazard-alert-items">
+                    {alerts.slice(0, 3).map((alert) => (
+                      <a href={alert.properties.web ?? alert.id} target="_blank" rel="noreferrer" key={alert.id}>
+                        <i aria-hidden="true">{alertIcon(alert.properties.event)}</i>
+                        <span>
+                          <strong>{alert.properties.event}</strong>
+                          <small>{alert.properties.headline ?? "Read the official National Weather Service alert text"}</small>
+                        </span>
+                        <b aria-hidden="true">↗</b>
+                      </a>
+                    ))}
+                  </div>
+                ) : <strong>None active</strong>}
               </article>
               <article className="hazard-item" style={{ borderTopColor: spcOutlook?.color }}>
                 <span>SPC Day 1</span><strong>{spcOutlook?.label ?? "Checking"}</strong>

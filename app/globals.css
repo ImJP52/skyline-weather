@@ -189,10 +189,21 @@ main {
 .confidence { flex: 0 0 auto; padding: 8px 11px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
 .confidence--high { background: #26715f; }.confidence--medium { background: #987127; }.confidence--low { background: #9e433a; }
 .hazard-ribbon { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.hazard-ribbon--active { grid-template-columns: repeat(3, 1fr); }
 .hazard-item { min-height: 76px; padding: 14px 16px; border: 1px solid var(--line); border-top: 4px solid #86a8b0; border-radius: 10px; background: #fff; text-decoration: none; box-shadow: 0 5px 20px rgba(17,50,72,.05); }
 .hazard-item--active { border-top-color: var(--severe); background: #fff6f3; }
-.hazard-item span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.hazard-item > span { display: block; margin-bottom: 6px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .hazard-item strong { font-size: 14px; }
+.hazard-alert-list { grid-column: span 2; }
+.hazard-ribbon--active .hazard-alert-list { grid-column: 1 / -1; }
+.hazard-alert-items { display: grid; gap: 6px; margin-top: 9px; }
+.hazard-alert-items a { display: grid; grid-template-columns: 26px minmax(0, 1fr) 18px; align-items: center; gap: 8px; padding: 8px 9px; border: 1px solid rgba(185,66,53,.18); border-radius: 7px; background: #fff; color: var(--ink); text-decoration: none; }
+.hazard-alert-items a:hover, .hazard-alert-items a:focus-visible { border-color: var(--severe); outline: none; }
+.hazard-alert-items i { font-size: 20px; font-style: normal; }
+.hazard-alert-items span { display: flex; min-width: 0; flex-direction: column; gap: 2px; margin: 0; letter-spacing: 0; text-transform: none; }
+.hazard-alert-items strong { font-size: 12px; }
+.hazard-alert-items small { overflow: hidden; color: var(--muted); font-size: 9px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.hazard-alert-items b { color: var(--severe); }
 .enthusiast-top-grid { display: grid; grid-template-columns: 1.55fr .75fr; gap: 16px; }
 .ops-panel { padding: 20px; border: 1px solid #cad8dc; border-radius: 12px; background: rgba(255,255,255,.94); box-shadow: var(--shadow); }
 .ops-panel__heading { display: flex; justify-content: space-between; align-items: start; gap: 14px; margin-bottom: 18px; }
