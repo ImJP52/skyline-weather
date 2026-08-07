@@ -178,6 +178,12 @@ export default function Home() {
   const [updated, setUpdated] = useState("");
 
   useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const serviceWorkerUrl = new URL("./sw.js", window.location.href).href;
+    navigator.serviceWorker.register(serviceWorkerUrl).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
     const load = async () => {
       setLoading(true);

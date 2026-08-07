@@ -15,7 +15,19 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase,
     title,
     description,
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+    applicationName: "Heartland WeatherOps",
+    manifest: "/manifest.webmanifest",
+    themeColor: "#13243a",
+    appleWebApp: {
+      capable: true,
+      title: "WeatherOps",
+      statusBarStyle: "black-translucent",
+    },
+    icons: {
+      icon: "/favicon.svg",
+      shortcut: "/favicon.svg",
+      apple: "/apple-touch-icon.png",
+    },
     openGraph: {
       title: "Heartland WeatherOps",
       description: "Justin Cody’s Des Moines Weather",
