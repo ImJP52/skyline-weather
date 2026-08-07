@@ -42,7 +42,7 @@ main {
 .brand-hero img {
   display: block;
   width: min(100%, 1220px);
-  height: clamp(110px, 21vw, 260px);
+  height: clamp(125px, 28vw, 340px);
   object-fit: cover;
   object-position: center bottom;
 }
