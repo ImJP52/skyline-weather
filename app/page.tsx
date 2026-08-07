@@ -59,6 +59,24 @@ type SpcOutlook = {
   color: string;
 };
 
+type NwsPeriod = {
+  number: number;
+  name: string;
+  startTime: string;
+  isDaytime: boolean;
+  temperature: number;
+  temperatureUnit: string;
+  probabilityOfPrecipitation?: { value: number | null };
+  shortForecast: string;
+  detailedForecast: string;
+};
+
+type NwsData = {
+  periods: NwsPeriod[];
+  stationName?: string;
+  observation?: Record<string, { value: number | null } | string | null>;
+};
+
 const DEFAULT_PLACE: Place = {
   name: "Johnston",
   admin1: "Iowa",
@@ -170,6 +188,7 @@ export default function Home() {
   const [spcOutlook, setSpcOutlook] = useState<SpcOutlook | null>(null);
   const [discussion, setDiscussion] = useState<ForecastDiscussion | null>(null);
   const [history, setHistory] = useState<HistoryData | null>(null);
+  const [nws, setNws] = useState<NwsData | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,6 +232,49 @@ export default function Home() {
           if (!response.ok) throw new Error("Weather service did not respond.");
           return response.json();
         });
+
+        const nwsRequest = (async (): Promise<NwsData | null> => {
+          const pointResponse = await fetch(
+            `https://api.weather.gov/points/${place.latitude},${place.longitude}`,
+            { signal: controller.signal, headers: { Accept: "application/geo+json" } },
+          );
+          if (!pointResponse.ok) return null;
+          const pointData = await pointResponse.json();
+          const forecastUrl = pointData.properties?.forecast;
+          const stationsUrl = pointData.properties?.observationStations;
+          if (!forecastUrl) return null;
+
+          const [forecastResponse, stationsResponse] = await Promise.all([
+            fetch(forecastUrl, {
+              signal: controller.signal,
+              headers: { Accept: "application/geo+json" },
+            }),
+            stationsUrl
+              ? fetch(stationsUrl, {
+                  signal: controller.signal,
+                  headers: { Accept: "application/geo+json" },
+                })
+              : Promise.resolve(null),
+          ]);
+          if (!forecastResponse.ok) return null;
+          const forecastData = await forecastResponse.json();
+          const nearestStation = stationsResponse?.ok
+            ? (await stationsResponse.json()).features?.[0]
+            : null;
+          let observation;
+          if (nearestStation?.id) {
+            const observationResponse = await fetch(`${nearestStation.id}/observations/latest`, {
+              signal: controller.signal,
+              headers: { Accept: "application/geo+json" },
+            });
+            if (observationResponse.ok) observation = (await observationResponse.json()).properties;
+          }
+          return {
+            periods: forecastData.properties?.periods ?? [],
+            stationName: nearestStation?.properties?.name,
+            observation,
+          };
+        })().catch(() => null);
 
         const alertRequest = fetch(
           `https://api.weather.gov/alerts/active?point=${place.latitude},${place.longitude}`,
@@ -340,14 +402,16 @@ export default function Home() {
           };
         })().catch(() => null);
 
-        const [weatherResponse, alertResponse, spcResponse, discussionResponse, historyResponse] = await Promise.all([
+        const [weatherResponse, nwsResponse, alertResponse, spcResponse, discussionResponse, historyResponse] = await Promise.all([
           weatherRequest,
+          nwsRequest,
           alertRequest,
           spcRequest,
           discussionRequest,
           historyRequest,
         ]);
         setWeather(weatherResponse);
+        setNws(nwsResponse);
         setAlerts(alertResponse.features ?? []);
         setDiscussion(discussionResponse);
         setHistory(historyResponse);
@@ -491,6 +555,62 @@ export default function Home() {
 
   const currentCode = weather ? Number(weather.current.weather_code) : 0;
   const currentInfo = weatherInfo(currentCode);
+  const celsiusToFahrenheit = (value: number) => value * 9 / 5 + 32;
+  const kilometersToMiles = (value: number) => value * 0.621371;
+  const pascalsToInHg = (value: number) => value * 0.0002953;
+  const observedValue = (key: string) => {
+    const field = nws?.observation?.[key];
+    return field && typeof field === "object" && "value" in field && Number.isFinite(field.value)
+      ? Number(field.value)
+      : null;
+  };
+  const observedTemperature = observedValue("temperature");
+  const observedFeelsLike = observedValue("heatIndex") ?? observedValue("windChill");
+  const observedHumidity = observedValue("relativeHumidity");
+  const observedWind = observedValue("windSpeed");
+  const observedWindDirection = observedValue("windDirection");
+  const observedGust = observedValue("windGust");
+  const observedPressure = observedValue("seaLevelPressure") ?? observedValue("barometricPressure");
+  const currentTemperature = observedTemperature === null
+    ? Number(weather?.current.temperature_2m ?? 0)
+    : celsiusToFahrenheit(observedTemperature);
+  const currentFeelsLike = observedFeelsLike === null
+    ? Number(weather?.current.apparent_temperature ?? 0)
+    : celsiusToFahrenheit(observedFeelsLike);
+  const currentHumidity = observedHumidity ?? Number(weather?.current.relative_humidity_2m ?? 0);
+  const currentWind = observedWind === null
+    ? Number(weather?.current.wind_speed_10m ?? 0)
+    : kilometersToMiles(observedWind);
+  const currentWindDirection = observedWindDirection ?? Number(weather?.current.wind_direction_10m ?? 0);
+  const currentGust = observedGust === null
+    ? Number(weather?.current.wind_gusts_10m ?? 0)
+    : kilometersToMiles(observedGust);
+  const currentPressure = observedPressure === null
+    ? Number(weather?.current.surface_pressure ?? 0) * 0.02953
+    : pascalsToInHg(observedPressure);
+  const nwsDaily = useMemo(() => {
+    if (!nws?.periods.length) return [];
+    const days: Array<{ date: string; name: string; forecast: string; detail: string; high?: number; low?: number; rain: number }> = [];
+    nws.periods.forEach((period) => {
+      const date = period.startTime.slice(0, 10);
+      let day = days.find((candidate) => candidate.date === date);
+      if (!day) {
+        day = { date, name: period.name, forecast: period.shortForecast, detail: period.detailedForecast, rain: 0 };
+        days.push(day);
+      }
+      if (period.isDaytime) {
+        day.high = period.temperature;
+        day.name = period.name;
+        day.forecast = period.shortForecast;
+        day.detail = period.detailedForecast;
+      } else {
+        day.low = period.temperature;
+        if (!day.forecast) day.forecast = period.shortForecast;
+      }
+      day.rain = Math.max(day.rain, Number(period.probabilityOfPrecipitation?.value ?? 0));
+    });
+    return days.slice(0, 7);
+  }, [nws]);
   const nextTwelveHours = hourly.slice(0, 12);
   const trendTemperatures = weather
     ? nextTwelveHours.map(({ index }) => Number(weather.hourly.temperature_2m[index]))
@@ -521,12 +641,14 @@ export default function Home() {
   const peakRainChance = weather
     ? Math.round(Number(weather.hourly.precipitation_probability[peakRainHour.index] ?? 0))
     : 0;
+  const primaryHigh = nwsDaily[0]?.high ?? Number(weather?.daily.temperature_2m_max[0] ?? 0);
+  const primaryLow = nwsDaily[0]?.low ?? Number(weather?.daily.temperature_2m_min[0] ?? 0);
   const todaySummary = weather
-    ? `${currentInfo.label} now. High near ${Math.round(Number(weather.daily.temperature_2m_max[0]))}°. ${
+    ? `${typeof nws?.observation?.textDescription === "string" ? nws.observation.textDescription : currentInfo.label} now. High near ${Math.round(primaryHigh)}°. ${
         peakRainChance >= 20
           ? `Rain chances peak near ${peakRainChance}% around ${formatHour(peakRainHour.time)}.`
           : "Little precipitation is expected through the next 12 hours."
-      } Winds may gust to ${Math.round(Number(weather.current.wind_gusts_10m))} mph.`
+      } Winds may gust to ${Math.round(currentGust)} mph.`
     : "";
   const yesterdayHistory = history?.days.at(-1);
   const monthRain = history
@@ -583,7 +705,7 @@ export default function Home() {
             <span aria-hidden="true">◎</span>
             {locating ? "Finding you…" : "Use my location"}
           </button>
-          <span className="data-source">Live data · Open‑Meteo</span>
+          <span className="data-source">Current: NWS · Detail: Open‑Meteo</span>
         </div>
       </header>
 
@@ -631,15 +753,15 @@ export default function Home() {
                 <div className="current-main">
                   <WeatherMark code={currentCode} large />
                   <div>
-                    <div className="temperature">{Math.round(weather.current.temperature_2m)}°</div>
-                    <h2>{currentInfo.label}</h2>
-                    <p>Feels like {Math.round(weather.current.apparent_temperature)}°</p>
+                    <div className="temperature">{Math.round(currentTemperature)}°</div>
+                    <h2>{typeof nws?.observation?.textDescription === "string" ? nws.observation.textDescription : currentInfo.label}</h2>
+                    <p>Feels like {Math.round(currentFeelsLike)}°</p>
                   </div>
                 </div>
                 <div className="high-low">
-                  <span>High <strong>{Math.round(Number(weather.daily.temperature_2m_max[0]))}°</strong></span>
+                  <span>High <strong>{Math.round(primaryHigh)}°</strong></span>
                   <span className="divider" />
-                  <span>Low <strong>{Math.round(Number(weather.daily.temperature_2m_min[0]))}°</strong></span>
+                  <span>Low <strong>{Math.round(primaryLow)}°</strong></span>
                 </div>
               </article>
 
@@ -647,20 +769,20 @@ export default function Home() {
                 <article className="metric-card">
                   <span className="metric-icon">💧</span>
                   <p>Humidity</p>
-                  <strong>{Math.round(weather.current.relative_humidity_2m)}%</strong>
-                  <small>Current relative humidity</small>
+                  <strong>{Math.round(currentHumidity)}%</strong>
+                  <small>{nws?.stationName ? `Observed at ${nws.stationName}` : "Open‑Meteo estimate"}</small>
                 </article>
                 <article className="metric-card">
                   <span className="metric-icon">↗</span>
                   <p>Wind</p>
-                  <strong>{Math.round(weather.current.wind_speed_10m)} <em>mph</em></strong>
-                  <small>{windDirection(weather.current.wind_direction_10m)} · Gusts {Math.round(weather.current.wind_gusts_10m)} mph</small>
+                  <strong>{Math.round(currentWind)} <em>mph</em></strong>
+                  <small>{windDirection(currentWindDirection)} · Gusts {Math.round(currentGust)} mph</small>
                 </article>
                 <article className="metric-card">
                   <span className="metric-icon">◔</span>
                   <p>Pressure</p>
-                  <strong>{(weather.current.surface_pressure * 0.02953).toFixed(2)} <em>inHg</em></strong>
-                  <small>Surface pressure</small>
+                  <strong>{currentPressure.toFixed(2)} <em>inHg</em></strong>
+                  <small>{observedPressure === null ? "Open‑Meteo surface pressure" : "NWS station pressure"}</small>
                 </article>
                 <article className="metric-card">
                   <span className="metric-icon">☼</span>
@@ -813,24 +935,33 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="daily-list">
-                  {(weather.daily.time as string[]).map((day, index) => {
+                  {(nwsDaily.length ? nwsDaily : (weather.daily.time as string[]).map((day, index) => ({
+                    date: day,
+                    name: formatDay(day, index),
+                    forecast: weatherInfo(Number(weather.daily.weather_code[index])).label,
+                    detail: "Open-Meteo forecast",
+                    high: Number(weather.daily.temperature_2m_max[index]),
+                    low: Number(weather.daily.temperature_2m_min[index]),
+                    rain: Number(weather.daily.precipitation_probability_max[index]),
+                  }))).map((day, index) => {
                     const code = Number(weather.daily.weather_code[index]);
                     return (
-                      <div className="day-row" key={day}>
-                        <strong>{formatDay(day, index)}</strong>
+                      <div className="day-row" key={day.date} title={day.detail}>
+                        <strong>{index === 0 ? "Today" : day.name}</strong>
                         <div className="condition">
                           <WeatherMark code={code} />
-                          <span>{weatherInfo(code).label}</span>
+                          <span>{day.forecast}</span>
                         </div>
-                        <span className="daily-rain">💧 {Math.round(Number(weather.daily.precipitation_probability_max[index]))}%</span>
+                        <span className="daily-rain">💧 {Math.round(day.rain)}%</span>
                         <span className="temps">
-                          <strong>{Math.round(Number(weather.daily.temperature_2m_max[index]))}°</strong>
-                          <span>{Math.round(Number(weather.daily.temperature_2m_min[index]))}°</span>
+                          <strong>{day.high === undefined ? "—" : `${Math.round(day.high)}°`}</strong>
+                          <span>{day.low === undefined ? "—" : `${Math.round(day.low)}°`}</span>
                         </span>
                       </div>
                     );
                   })}
                 </div>
+                <p className="forecast-source">Primary forecast: {nwsDaily.length ? "National Weather Service" : "Open‑Meteo fallback"} · Hourly detail: Open‑Meteo</p>
 
                 <div className="history-strip">
                   <div>

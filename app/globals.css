@@ -314,6 +314,7 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .daily-list { border-top: 1px solid var(--line); }
 .day-row { display: grid; grid-template-columns: 80px minmax(160px, 1fr) 72px 80px; align-items: center; gap: 12px; min-height: 70px; border-bottom: 1px solid var(--line); font-size: 13px; }
 .day-row:last-child { border-bottom: 0; }
+.forecast-source { margin: 14px 0 0; color: var(--muted); font-size: 11px; letter-spacing: .02em; }
 .condition { display: flex; align-items: center; gap: 12px; color: var(--muted); }
 .daily-rain { color: #16748f; font-size: 12px; }
 .temps { display: flex; gap: 12px; justify-content: end; font-size: 15px; }
