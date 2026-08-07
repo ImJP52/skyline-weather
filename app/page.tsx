@@ -45,7 +45,11 @@ type Alert = {
     severity?: string;
     urgency?: string;
     sent?: string;
+    effective?: string;
+    onset?: string;
     expires?: string;
+    areaDesc?: string;
+    description?: string;
     instruction?: string;
     web?: string;
   };
@@ -211,6 +215,16 @@ export default function Home() {
   const [error, setError] = useState("");
   const [updated, setUpdated] = useState("");
   const [enthusiastView, setEnthusiastView] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+
+  useEffect(() => {
+    if (!selectedAlert) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelectedAlert(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [selectedAlert]);
 
   useEffect(() => {
     const syncView = () => setEnthusiastView(new URLSearchParams(window.location.search).get("view") === "enthusiast");
@@ -812,14 +826,14 @@ export default function Home() {
                 {alerts.length ? (
                   <div className="hazard-alert-items">
                     {alerts.slice(0, 3).map((alert) => (
-                      <a href={alert.properties.web ?? alert.id} target="_blank" rel="noreferrer" key={alert.id}>
+                      <button type="button" onClick={() => setSelectedAlert(alert)} key={alert.id}>
                         <i aria-hidden="true">{alertIcon(alert.properties.event)}</i>
                         <span>
                           <strong>{alert.properties.event}</strong>
                           <small>{alert.properties.headline ?? "Read the official National Weather Service alert text"}</small>
                         </span>
-                        <b aria-hidden="true">↗</b>
-                      </a>
+                        <b aria-hidden="true">Read</b>
+                      </button>
                     ))}
                   </div>
                 ) : <strong>None active</strong>}
@@ -834,6 +848,32 @@ export default function Home() {
                 <span>KDMX radar</span><strong>Live view ↗</strong>
               </a>
             </section>
+
+            {selectedAlert && (
+              <div className="alert-modal-backdrop" role="presentation" onMouseDown={() => setSelectedAlert(null)}>
+                <section className="alert-modal" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title" onMouseDown={(event) => event.stopPropagation()}>
+                  <button className="alert-modal__close" type="button" onClick={() => setSelectedAlert(null)} aria-label="Close alert text">×</button>
+                  <div className="alert-modal__title">
+                    <span aria-hidden="true">{alertIcon(selectedAlert.properties.event)}</span>
+                    <div>
+                      <p>National Weather Service alert</p>
+                      <h2 id="alert-modal-title">{selectedAlert.properties.event}</h2>
+                    </div>
+                  </div>
+                  {selectedAlert.properties.headline && <p className="alert-modal__headline">{selectedAlert.properties.headline}</p>}
+                  <dl className="alert-modal__facts">
+                    {selectedAlert.properties.areaDesc && <div><dt>Affected area</dt><dd>{selectedAlert.properties.areaDesc}</dd></div>}
+                    {selectedAlert.properties.expires && <div><dt>Expires</dt><dd>{new Date(selectedAlert.properties.expires).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</dd></div>}
+                  </dl>
+                  {selectedAlert.properties.description && <div className="alert-modal__text"><h3>Alert details</h3><p>{selectedAlert.properties.description}</p></div>}
+                  {selectedAlert.properties.instruction && <div className="alert-modal__instructions"><h3>Recommended action</h3><p>{selectedAlert.properties.instruction}</p></div>}
+                  <div className="alert-modal__actions">
+                    <button type="button" onClick={() => setSelectedAlert(null)}>Close</button>
+                    <a href={selectedAlert.id} target="_blank" rel="noreferrer">Open this alert’s NWS record ↗</a>
+                  </div>
+                </section>
+              </div>
+            )}
 
             <section className="enthusiast-top-grid">
               <article className="ops-panel atmosphere-panel">
