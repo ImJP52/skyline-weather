@@ -177,7 +177,7 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 }
 .notice button { border: 0; background: transparent; color: inherit; font-weight: 800; cursor: pointer; }
 
-.hero-grid { display: grid; grid-template-columns: minmax(320px, 1fr) 1.55fr; gap: 18px; margin-bottom: 18px; }
+.hero-grid { display: grid; grid-template-columns: minmax(320px, 1fr) 1.55fr; gap: 14px; margin-bottom: 14px; }
 .current-card, .panel, .metric-card {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -185,7 +185,7 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
   box-shadow: var(--shadow);
 }
 .current-card {
-  padding: 34px;
+  padding: 22px 26px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -220,21 +220,21 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .briefing-card .eyebrow { color: #f0b184; }
 .briefing-card h2 { max-width: 880px; font: 700 clamp(18px, 2vw, 24px)/1.35 Arial, sans-serif; letter-spacing: -.02em; }
 .briefing-badge { flex: 0 0 auto; padding: 9px 12px; border: 1px solid rgba(255,255,255,.24); border-radius: 999px; background: rgba(255,255,255,.1); font-size: 11px; font-weight: 800; }
-.current-main { display: flex; align-items: center; gap: 28px; position: relative; z-index: 1; }
+.current-main { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
 .weather-mark { display: inline-grid; place-items: center; min-width: 34px; height: 34px; font-size: 27px; line-height: 1; filter: saturate(0.85); }
 .weather-mark--large { min-width: 104px; height: 104px; font-size: 84px; }
 .temperature { font: 700 68px/0.95 Georgia, serif; letter-spacing: -0.06em; }
 .current-main h2 { margin: 8px 0 4px; font-family: Arial, sans-serif; font-size: 17px; }
 .current-main p { margin: 0; color: var(--muted); font-size: 14px; }
-.high-low { display: flex; align-items: center; gap: 19px; margin-top: 35px; color: var(--muted); font-size: 13px; }
+.high-low { display: flex; align-items: center; gap: 19px; margin-top: 18px; color: var(--muted); font-size: 13px; }
 .high-low strong { color: var(--ink); margin-left: 6px; font-size: 16px; }
 .divider { width: 1px; height: 20px; background: #c7dbe3; }
 
-.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.metric-card { padding: 22px 24px; position: relative; min-height: 148px; }
-.metric-icon { position: absolute; right: 19px; top: 17px; color: var(--teal); font-size: 23px; }
-.metric-card p { margin-bottom: 15px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
-.metric-card strong { display: block; margin-bottom: 8px; font: 700 29px/1 Georgia, serif; }
+.metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.metric-card { padding: 15px 20px; position: relative; min-height: 112px; }
+.metric-icon { position: absolute; right: 16px; top: 12px; color: var(--teal); font-size: 23px; }
+.metric-card p { margin-bottom: 8px; color: var(--muted); font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.metric-card strong { display: block; margin-bottom: 5px; font: 700 29px/1 Georgia, serif; }
 .metric-card em { font: 700 13px/1 Arial, sans-serif; color: var(--muted); }
 .metric-card small { color: var(--muted); font-size: 12px; }
 
@@ -438,7 +438,7 @@ footer p { margin: 0; }
   .site-header { grid-template-columns: auto 1fr; height: auto; padding-top: 14px; padding-bottom: 14px; }
   .data-source { display: none; }
   .hero-grid, .content-grid, .insight-grid { grid-template-columns: 1fr; }
-  .current-card { min-height: 280px; }
+  .current-card { min-height: 220px; }
 }
 
 @media (max-width: 620px) {
@@ -449,13 +449,13 @@ footer p { margin: 0; }
   .location-bar { align-items: start; gap: 14px; }
   .updated span { display: none; }
   .hero-grid { gap: 12px; }
-  .current-card { padding: 26px 22px; }
+  .current-card { padding: 20px 22px; }
   .briefing-card { align-items: flex-start; flex-direction: column; padding: 22px; }
   .briefing-badge { display: none; }
   .weather-mark--large { min-width: 72px; font-size: 62px; }
   .temperature { font-size: 57px; }
   .metrics-grid { gap: 10px; }
-  .metric-card { padding: 18px; min-height: 140px; }
+  .metric-card { padding: 14px 16px; min-height: 110px; }
   .metric-card strong { font-size: 24px; }
   .panel { padding: 21px 17px; }
   .section-heading > span { display: none; }
