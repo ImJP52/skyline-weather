@@ -196,6 +196,14 @@ export default function Home() {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState("");
   const [updated, setUpdated] = useState("");
+  const [enthusiastView, setEnthusiastView] = useState(false);
+
+  useEffect(() => {
+    const syncView = () => setEnthusiastView(new URLSearchParams(window.location.search).get("view") === "enthusiast");
+    syncView();
+    window.addEventListener("popstate", syncView);
+    return () => window.removeEventListener("popstate", syncView);
+  }, []);
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
@@ -215,7 +223,7 @@ export default function Home() {
         current:
           "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
         hourly:
-          "temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,uv_index",
+          "temperature_2m,dew_point_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,wind_direction_10m,pressure_msl,cloud_cover,visibility,uv_index",
         daily:
           "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max",
         temperature_unit: "fahrenheit",
@@ -567,6 +575,8 @@ export default function Home() {
   const observedTemperature = observedValue("temperature");
   const observedFeelsLike = observedValue("heatIndex") ?? observedValue("windChill");
   const observedHumidity = observedValue("relativeHumidity");
+  const observedDewPoint = observedValue("dewpoint");
+  const observedVisibility = observedValue("visibility");
   const observedWind = observedValue("windSpeed");
   const observedWindDirection = observedValue("windDirection");
   const observedGust = observedValue("windGust");
@@ -588,6 +598,18 @@ export default function Home() {
   const currentPressure = observedPressure === null
     ? Number(weather?.current.surface_pressure ?? 0) * 0.02953
     : pascalsToInHg(observedPressure);
+  const currentDewPoint = observedDewPoint === null
+    ? Number(weather?.hourly.dew_point_2m[currentHourIndex] ?? 0)
+    : celsiusToFahrenheit(observedDewPoint);
+  const currentVisibility = observedVisibility === null
+    ? Number(weather?.hourly.visibility[currentHourIndex] ?? 0) / 5280
+    : observedVisibility / 1609.344;
+  const observationTimestamp = typeof nws?.observation?.timestamp === "string"
+    ? nws.observation.timestamp
+    : null;
+  const observationAge = observationTimestamp
+    ? Math.max(0, Math.round((Date.now() - new Date(observationTimestamp).getTime()) / 60000))
+    : null;
   const nwsDaily = useMemo(() => {
     if (!nws?.periods.length) return [];
     const days: Array<{ date: string; name: string; forecast: string; detail: string; high?: number; low?: number; rain: number }> = [];
@@ -643,6 +665,12 @@ export default function Home() {
     : 0;
   const primaryHigh = nwsDaily[0]?.high ?? Number(weather?.daily.temperature_2m_max[0] ?? 0);
   const primaryLow = nwsDaily[0]?.low ?? Number(weather?.daily.temperature_2m_min[0] ?? 0);
+  const openMeteoHigh = Number(weather?.daily.temperature_2m_max[0] ?? primaryHigh);
+  const forecastSpread = Math.abs(primaryHigh - openMeteoHigh);
+  const confidence = forecastSpread <= 2 ? "High" : forecastSpread <= 5 ? "Medium" : "Low";
+  const pressureNow = Number(weather?.hourly.pressure_msl[currentHourIndex] ?? 0);
+  const pressureLater = Number(weather?.hourly.pressure_msl[currentHourIndex + 3] ?? pressureNow);
+  const pressureChange = (pressureLater - pressureNow) * 0.02953;
   const todaySummary = weather
     ? `${typeof nws?.observation?.textDescription === "string" ? nws.observation.textDescription : currentInfo.label} now. High near ${Math.round(primaryHigh)}°. ${
         peakRainChance >= 20
@@ -732,7 +760,128 @@ export default function Home() {
           <p className="updated">{updated ? `Updated ${updated}` : "Updating now"}<span> · Local time</span></p>
         </section>
 
-        {loading && !weather ? (
+        <nav className="view-switcher" aria-label="Dashboard view">
+          <a className={!enthusiastView ? "active" : ""} href="?view=standard">Standard dashboard</a>
+          <a className={enthusiastView ? "active" : ""} href="?view=enthusiast">Enthusiast dashboard</a>
+        </nav>
+
+        {enthusiastView && loading && !weather && (
+          <section className="loading-card" aria-live="polite">
+            <div className="spinner" />
+            <h2>Building the weather picture…</h2>
+            <p>Combining observations, forecasts, and hazard guidance for {place.name}.</p>
+          </section>
+        )}
+
+        {enthusiastView && weather && (
+          <div className="enthusiast-dashboard">
+            <section className="enthusiast-heading">
+              <div>
+                <p className="eyebrow">Operational view · experimental</p>
+                <h2>Weather situation dashboard</h2>
+                <p>Observations, forecast evolution, hazards, and source agreement on one timeline.</p>
+              </div>
+              <span className={`confidence confidence--${confidence.toLowerCase()}`}>{confidence} forecast confidence</span>
+            </section>
+
+            <section className="hazard-ribbon" aria-label="Hazard status">
+              <article className={alerts.length ? "hazard-item hazard-item--active" : "hazard-item"}>
+                <span>NWS alerts</span><strong>{alerts.length ? `${alerts.length} active` : "None active"}</strong>
+              </article>
+              <article className="hazard-item" style={{ borderTopColor: spcOutlook?.color }}>
+                <span>SPC Day 1</span><strong>{spcOutlook?.label ?? "Checking"}</strong>
+              </article>
+              <a className="hazard-item" href="https://www.wpc.ncep.noaa.gov/qpf/excessive_rainfall_outlook_ero.php" target="_blank" rel="noreferrer">
+                <span>Excessive rain</span><strong>WPC outlook ↗</strong>
+              </a>
+              <a className="hazard-item" href={radarUrl} target="_blank" rel="noreferrer">
+                <span>KDMX radar</span><strong>Live view ↗</strong>
+              </a>
+            </section>
+
+            <section className="enthusiast-top-grid">
+              <article className="ops-panel atmosphere-panel">
+                <div className="ops-panel__heading">
+                  <div><p className="eyebrow">Current atmosphere</p><h3>{nws?.stationName ?? "Local estimate"}</h3></div>
+                  <span>{observationAge === null ? "Open‑Meteo fallback" : `${observationAge} min old`}</span>
+                </div>
+                <div className="atmosphere-main">
+                  <strong>{Math.round(currentTemperature)}°</strong>
+                  <div><span>{typeof nws?.observation?.textDescription === "string" ? nws.observation.textDescription : currentInfo.label}</span><small>Feels like {Math.round(currentFeelsLike)}°</small></div>
+                </div>
+                <div className="atmosphere-grid">
+                  <div><span>Dew point</span><strong>{Math.round(currentDewPoint)}°</strong></div>
+                  <div><span>Humidity</span><strong>{Math.round(currentHumidity)}%</strong></div>
+                  <div><span>Wind</span><strong>{windDirection(currentWindDirection)} {Math.round(currentWind)}</strong><small>Gust {Math.round(currentGust)} mph</small></div>
+                  <div><span>Pressure</span><strong>{currentPressure.toFixed(2)}</strong><small>{pressureChange > .01 ? "Rising" : pressureChange < -.01 ? "Falling" : "Steady"} {Math.abs(pressureChange).toFixed(2)} in/3h</small></div>
+                  <div><span>Visibility</span><strong>{currentVisibility.toFixed(1)} mi</strong></div>
+                  <div><span>UV index</span><strong>{Math.round(Number(weather.hourly.uv_index[currentHourIndex]))}</strong></div>
+                </div>
+              </article>
+
+              <article className="ops-panel confidence-panel">
+                <div className="ops-panel__heading"><div><p className="eyebrow">Source agreement</p><h3>Today’s high</h3></div></div>
+                <div className="model-row"><span>NWS forecast</span><strong>{Math.round(primaryHigh)}°</strong></div>
+                <div className="model-row"><span>Open‑Meteo</span><strong>{Math.round(openMeteoHigh)}°</strong></div>
+                <div className="spread-meter"><span style={{ width: `${Math.min(100, Math.max(8, forecastSpread * 15))}%` }} /></div>
+                <p>The two sources differ by {forecastSpread.toFixed(1)}°. {confidence === "High" ? "Guidance is closely aligned." : "Watch future updates for changing guidance."}</p>
+                <a href="https://forecast.weather.gov/product.php?issuedby=DMX&product=AFD&site=DMX" target="_blank" rel="noreferrer">Read NWS forecaster reasoning ↗</a>
+              </article>
+            </section>
+
+            <section className="ops-panel meteogram-panel">
+              <div className="ops-panel__heading">
+                <div><p className="eyebrow">Unified meteogram</p><h3>Next 12 hours</h3></div>
+                <span>Open‑Meteo detail · NWS observations</span>
+              </div>
+              <div className="meteogram-scroll">
+                <div className="meteogram-grid">
+                  {nextTwelveHours.map(({ time, index }, displayIndex) => {
+                    const temperature = Number(weather.hourly.temperature_2m[index]);
+                    const dewPoint = Number(weather.hourly.dew_point_2m[index]);
+                    const rainChance = Number(weather.hourly.precipitation_probability[index]);
+                    const wind = Number(weather.hourly.wind_speed_10m[index]);
+                    const gust = Number(weather.hourly.wind_gusts_10m[index]);
+                    return (
+                      <article className="meteogram-hour" key={time}>
+                        <strong className="met-time">{displayIndex === 0 ? "Now" : formatHour(time)}</strong>
+                        <WeatherMark code={Number(weather.hourly.weather_code[index])} />
+                        <div className="met-temp"><strong>{Math.round(temperature)}°</strong><span>DP {Math.round(dewPoint)}°</span></div>
+                        <div className="met-rain-track"><span style={{ height: `${Math.max(3, rainChance)}%` }} /></div>
+                        <span className="met-rain">{Math.round(rainChance)}%</span>
+                        <span className="met-wind">{windDirection(Number(weather.hourly.wind_direction_10m[index]))}<strong>{Math.round(wind)}</strong><small>G{Math.round(gust)}</small></span>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="meteogram-legend"><span>Temperature / dew point</span><span>Blue bar: rain probability</span><span>Wind: direction, sustained, gust</span></div>
+            </section>
+
+            <section className="enthusiast-bottom-grid">
+              <article className="ops-panel technical-panel">
+                <div className="ops-panel__heading"><div><p className="eyebrow">Forecast evolution</p><h3>Seven-day technical outlook</h3></div></div>
+                {nwsDaily.map((day, index) => (
+                  <div className="technical-day" key={day.date}>
+                    <strong>{index === 0 ? "Today" : day.name}</strong>
+                    <span>{day.forecast}</span>
+                    <span>PoP {Math.round(day.rain)}%</span>
+                    <b>{day.high === undefined ? "—" : `${Math.round(day.high)}°`} / {day.low === undefined ? "—" : `${Math.round(day.low)}°`}</b>
+                  </div>
+                ))}
+              </article>
+              <aside className="ops-links">
+                <a href={radarUrl} target="_blank" rel="noreferrer"><span>Radar</span><strong>KDMX base reflectivity ↗</strong></a>
+                <a href="https://www.spc.noaa.gov/products/outlook/" target="_blank" rel="noreferrer"><span>Severe weather</span><strong>SPC outlooks ↗</strong></a>
+                <a href="https://www.wpc.ncep.noaa.gov/" target="_blank" rel="noreferrer"><span>Precipitation & winter</span><strong>WPC guidance ↗</strong></a>
+                <a href={satelliteUrl} target="_blank" rel="noreferrer"><span>Satellite</span><strong>GOES-East loop ↗</strong></a>
+                <a href={stationUrl} target="_blank" rel="noreferrer"><span>Hyperlocal</span><strong>Tempest station ↗</strong></a>
+              </aside>
+            </section>
+          </div>
+        )}
+
+        {!enthusiastView && (loading && !weather ? (
           <section className="loading-card" aria-live="polite">
             <div className="spinner" />
             <h2>Reading the sky…</h2>
@@ -1083,7 +1232,7 @@ export default function Home() {
               </aside>
             </section>
           </>
-        ) : null}
+        ) : null)}
       </div>
 
       <footer>
