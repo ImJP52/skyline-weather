@@ -1,4 +1,4 @@
-# Cody Sky
+# Heartland WeatherOps
 
 Justin Cody’s responsive personal Des Moines weather dashboard. It starts in Johnston, Iowa and works for locations worldwide.
 

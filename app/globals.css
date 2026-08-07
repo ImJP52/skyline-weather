@@ -41,8 +41,10 @@ main {
 }
 .brand-hero img {
   display: block;
-  width: min(100%, 648px);
-  height: auto;
+  width: min(100%, 1220px);
+  height: clamp(220px, 39vw, 480px);
+  object-fit: cover;
+  object-position: center 48%;
 }
 
 .site-header {

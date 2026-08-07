@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("host") ?? "localhost:3000";
   const protocol = host.includes("localhost") ? "http" : "https";
   const metadataBase = new URL(`${protocol}://${host}`);
-  const title = "Cody Sky | Justin Cody’s Des Moines Weather";
+  const title = "Heartland WeatherOps | Justin Cody’s Des Moines Weather";
   const description =
     "Justin Cody’s personal Des Moines weather dashboard with live conditions, forecasts, alerts, radar, and satellite imagery.";
 
@@ -17,14 +17,14 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: {
-      title: "Cody Sky",
+      title: "Heartland WeatherOps",
       description: "Justin Cody’s Des Moines Weather",
       type: "website",
-      images: [{ url: "/og.png", width: 1200, height: 630, alt: "Cody Sky — Justin Cody’s Des Moines Weather" }],
+      images: [{ url: "/og.png", width: 1731, height: 909, alt: "Heartland WeatherOps — Justin Cody’s Des Moines Weather" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Cody Sky",
+      title: "Heartland WeatherOps",
       description: "Justin Cody’s Des Moines Weather",
       images: ["/og.png"],
     },

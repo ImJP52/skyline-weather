@@ -478,10 +478,10 @@ export default function Home() {
   return (
     <main>
       <header className="site-header">
-        <a className="brand" href="#top" aria-label="Cody Sky home">
+        <a className="brand" href="#top" aria-label="Heartland WeatherOps home">
           <span className="brand-mark">C</span>
           <span className="brand-copy">
-            <strong>Cody Sky</strong>
+            <strong>Heartland WeatherOps</strong>
             <small>Justin Cody’s Des Moines Weather</small>
           </span>
         </a>
@@ -514,10 +514,10 @@ export default function Home() {
         <span className="data-source">Live data · Open‑Meteo</span>
       </header>
 
-      <section className="brand-hero" aria-label="Cody Sky — Justin Cody’s Des Moines Weather">
+      <section className="brand-hero" aria-label="Heartland WeatherOps — Justin Cody’s Des Moines Weather">
         <img
           src="./og.png"
-          alt="Cody Sky over an illustrated Des Moines skyline at sunset"
+          alt="Heartland WeatherOps over the Des Moines skyline at sunset"
         />
       </section>
 
@@ -883,7 +883,7 @@ export default function Home() {
       </div>
 
       <footer>
-        <p>Cody Sky · A personal Des Moines weather dashboard by Justin Cody</p>
+        <p>Heartland WeatherOps · A personal Des Moines weather dashboard by Justin Cody</p>
         <p>Weather conditions can change quickly. Always follow official guidance during severe weather.</p>
       </footer>
     </main>
