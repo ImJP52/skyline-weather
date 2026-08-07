@@ -294,6 +294,9 @@ h2 { margin-bottom: 0; font: 700 24px/1.15 Georgia, serif; letter-spacing: -0.02
 .history-stats small, .history-stats strong { display: block; }
 .history-stats small { margin-bottom: 6px; color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .history-stats strong { font: 700 16px Georgia, serif; }
+.history-stats .history-source { grid-column: 1 / -1; padding: 10px 14px; background: #eef4f3; }
+.history-source strong { font: 700 12px Arial, sans-serif; color: var(--teal); }
+.history-source a { text-decoration-color: rgba(57, 127, 122, .35); text-underline-offset: 3px; }
 .side-stack { display: flex; flex-direction: column; gap: 14px; }
 .side-stack .panel { padding: 20px; }
 .sun-panel { min-height: 220px; }

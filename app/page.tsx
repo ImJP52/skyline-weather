@@ -18,8 +18,18 @@ type WeatherData = {
   daily: Record<string, (number | string)[]>;
 };
 
+type HistoryDay = {
+  date: string;
+  maxTemp: number;
+  minTemp: number;
+  precipitation: number;
+  source: "MRMS" | "station";
+};
+
 type HistoryData = {
-  daily: Record<string, (number | string)[]>;
+  days: HistoryDay[];
+  sourceLabel: string;
+  stationName?: string;
 };
 
 type ForecastDiscussion = {
@@ -246,22 +256,82 @@ export default function Home() {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
         const dateString = (date: Date) =>
           `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-        const historyParams = new URLSearchParams({
-          latitude: String(place.latitude),
-          longitude: String(place.longitude),
-          start_date: dateString(monthStart),
-          end_date: dateString(yesterday),
-          daily: "temperature_2m_max,temperature_2m_min,precipitation_sum",
-          temperature_unit: "fahrenheit",
-          precipitation_unit: "inch",
-          timezone: "auto",
-        });
-        const historyRequest = fetch(
-          `https://historical-forecast-api.open-meteo.com/v1/forecast?${historyParams}`,
-          { signal: controller.signal },
-        )
-          .then((response) => (response.ok ? response.json() : null))
-          .catch(() => null);
+        const historyRequest = (async (): Promise<HistoryData | null> => {
+          const startDate = dateString(monthStart);
+          const endDate = dateString(yesterday);
+          const iemUrl = `https://mesonet.agron.iastate.edu/iemre/multiday/${startDate}/${endDate}/${place.latitude}/${place.longitude}/json`;
+          const iemResponse = await fetch(iemUrl, { signal: controller.signal });
+          if (!iemResponse.ok) return null;
+          const iemData = await iemResponse.json();
+
+          let stationName: string | undefined;
+          let stationDays = new Map<string, number>();
+          if (place.admin1 === "Iowa") {
+            const networkResponse = await fetch(
+              "https://mesonet.agron.iastate.edu/api/1/network/IA_ASOS.json",
+              { signal: controller.signal },
+            );
+            if (networkResponse.ok) {
+              const networkData = await networkResponse.json();
+              const stations = (networkData.data ?? []).filter(
+                (station: { online: boolean; latitude: number; longitude: number }) =>
+                  station.online && Number.isFinite(station.latitude) && Number.isFinite(station.longitude),
+              );
+              const nearest = stations.sort(
+                (a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) =>
+                  Math.hypot(a.latitude - place.latitude, a.longitude - place.longitude) -
+                  Math.hypot(b.latitude - place.latitude, b.longitude - place.longitude),
+              )[0];
+              if (nearest) {
+                stationName = `${nearest.name} (${nearest.id})`;
+                const stationResponse = await fetch(
+                  `https://mesonet.agron.iastate.edu/api/1/daily.json?station=${nearest.id}&network=IA_ASOS&year=${now.getFullYear()}&month=${now.getMonth() + 1}`,
+                  { signal: controller.signal },
+                );
+                if (stationResponse.ok) {
+                  const stationData = await stationResponse.json();
+                  stationDays = new Map(
+                    (stationData.data ?? [])
+                      .filter((day: { date: string; precip: number | null }) => day.precip !== null)
+                      .map((day: { date: string; precip: number }) => [day.date, Number(day.precip)]),
+                  );
+                }
+              }
+            }
+          }
+
+          const days: HistoryDay[] = (iemData.data ?? []).map(
+            (day: {
+              date: string;
+              mrms_precip_in: number | null;
+              daily_high_f: number;
+              daily_low_f: number;
+            }) => {
+              const hasMrms = day.mrms_precip_in !== null && Number.isFinite(day.mrms_precip_in);
+              const stationPrecip = stationDays.get(day.date);
+              return {
+                date: day.date,
+                maxTemp: Number(day.daily_high_f),
+                minTemp: Number(day.daily_low_f),
+                precipitation: hasMrms
+                  ? Number(day.mrms_precip_in)
+                  : Number.isFinite(stationPrecip)
+                    ? Number(stationPrecip)
+                    : 0,
+                source: hasMrms ? "MRMS" : "station",
+              };
+            },
+          );
+          if (!days.length) return null;
+          const usedStationFallback = days.some((day) => day.source === "station");
+          return {
+            days,
+            sourceLabel: usedStationFallback
+              ? `IEM MRMS · ${stationName ?? "station"} fallback`
+              : "IEM MRMS",
+            stationName,
+          };
+        })().catch(() => null);
 
         const [weatherResponse, alertResponse, spcResponse, discussionResponse, historyResponse] = await Promise.all([
           weatherRequest,
@@ -391,13 +461,9 @@ export default function Home() {
           : "Little precipitation is expected through the next 12 hours."
       } Winds may gust to ${Math.round(Number(weather.current.wind_gusts_10m))} mph.`
     : "";
-  const historyLength = history?.daily.time?.length ?? 0;
-  const yesterdayIndex = Math.max(0, historyLength - 1);
+  const yesterdayHistory = history?.days.at(-1);
   const monthRain = history
-    ? (history.daily.precipitation_sum as (number | string)[]).reduce(
-        (sum, value) => sum + Number(value || 0),
-        0,
-      )
+    ? history.days.reduce((sum, day) => sum + day.precipitation, 0)
     : 0;
   const radarUrl =
     "https://radar.weather.gov/?settings=v1_eyJhZ2VuZGEiOnsiaWQiOiJsb2NhbCIsImNlbnRlciI6Wy05My43MjI4LDQxLjczMTFdLCJ6b29tIjo3LCJmaWx0ZXIiOiJXU1ItODhEIiwibGF5ZXIiOiJzcl9icmVmIiwic3RhdGlvbiI6IktETVgiLCJ0cmFuc3BhcmVudCI6dHJ1ZSwiYWxlcnRzT3ZlcmxheSI6dHJ1ZSwic3RhdGlvbkljb25zT3ZlcmxheSI6dHJ1ZX0sImFuaW1hdGluZyI6ZmFsc2UsImJhc2UiOiJzdGFuZGFyZCIsImNvdW50eSI6ZmFsc2UsImN3YSI6ZmFsc2UsInN0YXRlIjpmYWxzZSwibWVudSI6dHJ1ZSwic2hvcnRGdXNlZE9ubHkiOnRydWUsIm9wYWNpdHkiOnsiYWxlcnRzIjowLjgsImxvY2FsIjowLjYsImxvY2FsU3RhdGlvbnMiOjAuOCwibmF0aW9uYWwiOjAuNn19";
@@ -694,11 +760,19 @@ export default function Home() {
                     <p className="eyebrow">Recent history</p>
                     <h2>Yesterday & this month</h2>
                   </div>
-                  {history ? (
+                  {history && yesterdayHistory ? (
                     <div className="history-stats">
-                      <span><small>Yesterday</small><strong>{Math.round(Number(history.daily.temperature_2m_max[yesterdayIndex]))}° / {Math.round(Number(history.daily.temperature_2m_min[yesterdayIndex]))}°</strong></span>
-                      <span><small>Yesterday’s rain</small><strong>{Number(history.daily.precipitation_sum[yesterdayIndex]).toFixed(2)}″</strong></span>
+                      <span><small>Yesterday</small><strong>{Math.round(yesterdayHistory.maxTemp)}° / {Math.round(yesterdayHistory.minTemp)}°</strong></span>
+                      <span><small>Yesterday’s rain</small><strong>{yesterdayHistory.precipitation.toFixed(2)}″</strong></span>
                       <span><small>Month to date</small><strong>{monthRain.toFixed(2)}″ rain</strong></span>
+                      <span className="history-source">
+                        <small>Observed precipitation source</small>
+                        <strong>
+                          <a href="https://mesonet.agron.iastate.edu/iemre/" target="_blank" rel="noreferrer">
+                            {history.sourceLabel}
+                          </a>
+                        </strong>
+                      </span>
                     </div>
                   ) : (
                     <p className="muted-copy">Recent history is temporarily unavailable.</p>
